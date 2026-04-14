@@ -2,6 +2,30 @@ import { auth } from "@/auth";
 import { NextRequest, NextResponse } from "next/server";
 
 // ---------------------------------------------------------------------------
+// Content Security Policy — generated per-request so we can embed a nonce.
+// In production: nonce + strict-dynamic (no unsafe-inline for scripts).
+// In development: relax to unsafe-inline + unsafe-eval for Turbopack HMR.
+// ---------------------------------------------------------------------------
+
+function buildCsp(nonce: string): string {
+  const isProd = process.env.NODE_ENV === "production";
+  return [
+    "default-src 'self'",
+    isProd
+      ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://lh3.googleusercontent.com",
+    isProd
+      ? "connect-src 'self' https://accounts.google.com https://*.supabase.co"
+      : "connect-src 'self' ws: wss: https://accounts.google.com https://*.supabase.co",
+    "frame-src https://accounts.google.com",
+    "form-action 'self' https://accounts.google.com",
+    "base-uri 'self'",
+  ].join("; ");
+}
+
+// ---------------------------------------------------------------------------
 // Sliding-window in-memory rate limiter.
 // Per-worker (Edge) — acceptable for a small private app.
 // Multiple Vercel edge workers each maintain independent state, which is fine
@@ -81,8 +105,15 @@ export default auth((req) => {
     });
   }
 
-  // Let NextAuth handle auth redirect (undefined = NextAuth decides)
-  return undefined;
+  // Attach a fresh nonce to the request headers (available to server components
+  // via `headers().get("x-nonce")`) and set the CSP response header.
+  const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-nonce", nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  return response;
 });
 
 export const config = {

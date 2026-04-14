@@ -55,3 +55,4 @@ openspec/
 .github/skills/
 # local overrides
 *.local
+.playwright-mcp/

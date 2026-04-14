@@ -1,18 +1,13 @@
 -- =============================================================================
--- 000_consolidated.sql — Canonical single-file migration for fresh Supabase instances
+-- schema.sql — Canonical idempotent schema for Titanium
 --
--- This file consolidates migrations 001, 002, and 003 in the correct order.
--- It is fully idempotent and can be run multiple times on any Supabase instance
--- (fresh or already partially migrated) without errors.
---
--- Individual migration files (001–003) are kept for historical reference only.
--- For new environments, run this file instead.
+-- Safe to run multiple times on any Supabase instance (fresh or existing).
+-- Run in: Supabase Dashboard → SQL Editor
 -- =============================================================================
 
 
 -- ---------------------------------------------------------------------------
 -- TABLES
--- (from 001_initial.sql)
 -- ---------------------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS members (
@@ -22,6 +17,7 @@ CREATE TABLE IF NOT EXISTS members (
   fee_amount  NUMERIC(8,2) NOT NULL,
   paid_at     DATE NOT NULL,
   expires_at  DATE NOT NULL,
+  notes       TEXT,
   created_at  TIMESTAMPTZ DEFAULT NOW(),
   updated_at  TIMESTAMPTZ DEFAULT NOW()
 );
@@ -38,7 +34,6 @@ CREATE TABLE IF NOT EXISTS notification_log (
 
 -- ---------------------------------------------------------------------------
 -- ROW LEVEL SECURITY
--- (from 001_initial.sql — enabling RLS is idempotent)
 -- ---------------------------------------------------------------------------
 
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
@@ -46,43 +41,36 @@ ALTER TABLE notification_log ENABLE ROW LEVEL SECURITY;
 
 
 -- ---------------------------------------------------------------------------
--- NOTES COLUMN
--- (from 003_add_notes.sql — ADD COLUMN IF NOT EXISTS is natively idempotent)
+-- COLUMNS — add if not present (idempotent)
 -- ---------------------------------------------------------------------------
 
 ALTER TABLE members ADD COLUMN IF NOT EXISTS notes TEXT;
 
 
 -- ---------------------------------------------------------------------------
--- FEE_AMOUNT CONSTRAINT
--- (from 002_fee_amount_constraint.sql)
--- Drop any existing check constraints on fee_amount, then recreate with the
--- canonical name. The DO block makes the whole operation idempotent.
+-- FEE CONSTRAINT — drop any existing variant, recreate canonical
 -- ---------------------------------------------------------------------------
 
 DO $$
+DECLARE
+  r RECORD;
 BEGIN
-  -- Abort if any existing row would violate the constraint before we add it.
+  -- Validate existing data before adding constraint
   IF EXISTS (SELECT 1 FROM members WHERE fee_amount NOT IN (30, 35)) THEN
-    RAISE EXCEPTION
-      'Dirty data: some rows have fee_amount outside (30, 35). Fix data before running this migration.';
+    RAISE EXCEPTION 'Dirty data: fee_amount values outside (30, 35) exist. Fix data first.';
   END IF;
 
-  -- Drop all check constraints on fee_amount (handles any name variant).
-  DECLARE
-    r RECORD;
-  BEGIN
-    FOR r IN
-      SELECT conname FROM pg_constraint
-      WHERE conrelid = 'members'::regclass
-        AND contype = 'c'
-        AND pg_get_constraintdef(oid) LIKE '%fee_amount%'
-    LOOP
-      EXECUTE format('ALTER TABLE members DROP CONSTRAINT %I', r.conname);
-    END LOOP;
-  END;
+  -- Drop all check constraints on fee_amount (any name)
+  FOR r IN
+    SELECT conname FROM pg_constraint
+    WHERE conrelid = 'members'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) LIKE '%fee_amount%'
+  LOOP
+    EXECUTE format('ALTER TABLE members DROP CONSTRAINT %I', r.conname);
+  END LOOP;
 
-  -- Add the canonical constraint.
+  -- Add canonical constraint
   ALTER TABLE members
     ADD CONSTRAINT members_fee_amount_check CHECK (fee_amount IN (30, 35));
 END $$;
@@ -90,7 +78,6 @@ END $$;
 
 -- ---------------------------------------------------------------------------
 -- TRIGGER FUNCTION
--- (from 001_initial.sql — CREATE OR REPLACE is natively idempotent)
 -- ---------------------------------------------------------------------------
 
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -103,8 +90,7 @@ $$ LANGUAGE plpgsql;
 
 
 -- ---------------------------------------------------------------------------
--- TRIGGER
--- (from 001_initial.sql — guard via pg_trigger to avoid duplicate-trigger error)
+-- TRIGGER — guard against duplicate
 -- ---------------------------------------------------------------------------
 
 DO $$

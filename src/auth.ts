@@ -9,6 +9,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    authorized({ auth: session }) {
+      if (process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production") {
+        return true;
+      }
+      return !!session;
+    },
     signIn({ profile }) {
       const allowed = process.env.ALLOWED_EMAIL;
       if (!allowed) return false;
@@ -27,6 +33,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
-    maxAge: 24 * 60 * 60, // 24 hours
+    maxAge: 4 * 60 * 60, // 4 hours
   },
 });

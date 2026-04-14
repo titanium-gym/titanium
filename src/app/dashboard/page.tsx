@@ -2,7 +2,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
 import { OverviewCharts } from "@/components/dashboard/OverviewCharts";
 import { parseISO, startOfMonth } from "date-fns";
-import { AlertTriangle, Clock } from "lucide-react";
+import { AlertTriangle, Clock, TrendingUp, XCircle, Euro, Users, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -33,7 +33,6 @@ export default async function DashboardPage() {
   const now = new Date();
   const thisMonthStart = startOfMonth(now);
 
-  // KPI calculations
   const total = all.length;
   const activos = all.filter((m) => getExpiryStatus(m.expires_at) === "active").length;
   const vencidos = all.filter((m) => getExpiryStatus(m.expires_at) === "expired").length;
@@ -45,7 +44,6 @@ export default async function DashboardPage() {
     (m) => parseISO(m.created_at) >= thisMonthStart
   ).length;
 
-  // Upcoming expirations (next 14 days, not yet expired)
   const proximosAVencer = all
     .filter((m) => {
       const days = getDaysUntilExpiry(m.expires_at);
@@ -53,17 +51,8 @@ export default async function DashboardPage() {
     })
     .sort((a, b) => getDaysUntilExpiry(a.expires_at) - getDaysUntilExpiry(b.expires_at));
 
-  const kpis = [
-    { label: "Total socios", value: total, sub: null },
-    { label: "Activos", value: activos, sub: null, accent: "text-emerald-400" },
-    { label: "Vencen pronto", value: vencenProto, sub: null, accent: "text-amber-400" },
-    { label: "Vencidos", value: vencidos, sub: null, accent: "text-rose-400" },
-    { label: "Ingresos este mes", value: `${ingresosMes} €`, sub: null, accent: "text-primary" },
-    { label: "Nuevos este mes", value: nuevosEsteMes, sub: null },
-  ];
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-black tracking-tight text-foreground">Inicio</h1>
@@ -72,20 +61,95 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* KPI grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        {kpis.map(({ label, value, accent }) => (
-          <Card key={label} className="bg-card/50 border-border/60">
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium truncate">
-                {label}
-              </p>
-              <p className={`text-2xl font-black mt-1 tabular-nums ${accent ?? "text-foreground"}`}>
-                {value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Hero KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Activos */}
+        <Card className="relative overflow-hidden border-emerald-500/25 bg-gradient-to-br from-emerald-500/8 to-transparent">
+          <CardContent className="pt-6 pb-5 px-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-400/80">
+                Activos
+              </span>
+              <div className="w-7 h-7 rounded-full bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center">
+                <TrendingUp className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
+              </div>
+            </div>
+            <p className="text-5xl font-black tabular-nums tracking-tight text-emerald-400">
+              {activos}
+            </p>
+            <div className="mt-3 h-px w-10 bg-emerald-500/40 rounded-full" />
+          </CardContent>
+        </Card>
+
+        {/* Ingresos */}
+        <Card className="relative overflow-hidden border-border/60">
+          <CardContent className="pt-6 pb-5 px-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground/70">
+                Ingresos · mes
+              </span>
+              <div className="w-7 h-7 rounded-full bg-foreground/5 border border-border flex items-center justify-center">
+                <Euro className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
+              </div>
+            </div>
+            <p className="text-5xl font-black tabular-nums tracking-tight text-foreground">
+              {ingresosMes}
+              <span className="text-2xl font-bold text-muted-foreground ml-1">€</span>
+            </p>
+            <div className="mt-3 h-px w-10 bg-border rounded-full" />
+          </CardContent>
+        </Card>
+
+        {/* Vencidos */}
+        <Card className="relative overflow-hidden border-primary/25 bg-gradient-to-br from-primary/8 to-transparent">
+          <CardContent className="pt-6 pb-5 px-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-primary/70">
+                Vencidos
+              </span>
+              <div className="w-7 h-7 rounded-full bg-primary/15 border border-primary/25 flex items-center justify-center">
+                <XCircle className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              </div>
+            </div>
+            <p className="text-5xl font-black tabular-nums tracking-tight text-primary">
+              {vencidos}
+            </p>
+            <div className="mt-3 h-px w-10 bg-primary/40 rounded-full" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Secondary stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium truncate">
+              Total
+            </p>
+          </div>
+          <p className="text-xl font-black tabular-nums text-foreground shrink-0">{total}</p>
+        </div>
+
+        <div className="rounded-xl border border-amber-500/25 bg-amber-500/5 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" aria-hidden="true" />
+            <p className="text-[11px] text-amber-400/80 uppercase tracking-wider font-medium truncate">
+              Vencen pronto
+            </p>
+          </div>
+          <p className="text-xl font-black tabular-nums text-amber-400 shrink-0">{vencenProto}</p>
+        </div>
+
+        <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium truncate">
+              Nuevos
+            </p>
+          </div>
+          <p className="text-xl font-black tabular-nums text-foreground shrink-0">{nuevosEsteMes}</p>
+        </div>
       </div>
 
       {/* Charts */}
