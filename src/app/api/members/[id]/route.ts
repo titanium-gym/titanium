@@ -1,0 +1,101 @@
+import { auth } from "@/auth";
+import { getSupabaseClient } from "@/lib/supabase";
+import { memberUpdateSchema } from "@/lib/schemas/member";
+import { NextResponse } from "next/server";
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+async function requireAuth() {
+  const session = await auth();
+  if (!session) return null;
+  return session;
+}
+
+function validateId(id: string) {
+  if (!UUID_RE.test(id))
+    return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+  return null;
+}
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await requireAuth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const idError = validateId(id);
+  if (idError) return idError;
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("members")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(data);
+}
+
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await requireAuth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const idError = validateId(id);
+  if (idError) return idError;
+
+  const body = await req.json();
+  const parsed = memberUpdateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Only pass fields that were actually provided — avoids touching columns
+  // that may not exist yet (e.g. notes before migration 003 is applied).
+  const updateData = Object.fromEntries(
+    Object.entries(parsed.data).filter(([, v]) => v !== undefined)
+  );
+
+  if (Object.keys(updateData).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("members")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data);
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await requireAuth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  const idError = validateId(id);
+  if (idError) return idError;
+
+  const supabase = getSupabaseClient();
+  const { error } = await supabase
+    .from("members")
+    .delete()
+    .eq("id", id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return new NextResponse(null, { status: 204 });
+}
