@@ -1,16 +1,10 @@
-import { auth } from "@/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { memberUpdateSchema } from "@/lib/schemas/member";
 import { NextResponse } from "next/server";
 
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-async function requireAuth() {
-  const session = await auth();
-  if (!session) return null;
-  return session;
-}
 
 function validateId(id: string) {
   if (!UUID_RE.test(id))

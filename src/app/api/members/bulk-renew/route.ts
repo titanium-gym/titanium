@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { format, addMonths } from "date-fns";
@@ -14,7 +14,7 @@ const bulkRenewSchema = z.object({
 });
 
 export async function POST(req: Request) {
-  const session = await auth();
+  const session = await requireAuth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();

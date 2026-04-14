@@ -32,9 +32,3 @@ jobs:
         run: npm test
         env:
           EXPIRY_WARNING_DAYS: "3"
-
-  # E2E tests require Google OAuth redirect + real Supabase DB — cannot run
-  # reliably in headless CI. Run locally with: npm run test:e2e
-  # If you add a test Supabase project and mock OAuth in the future, re-enable.
-  #
-  # test-e2e: (disabled)

@@ -23,14 +23,14 @@ interface OverviewChartsProps {
 }
 
 const STATUS_COLORS = {
-  Activos: "hsl(var(--chart-2))",
-  "Vence pronto": "hsl(var(--chart-4))",
-  Vencidos: "hsl(var(--chart-1))",
+  Activos: "var(--color-chart-2)",
+  "Vence pronto": "var(--color-chart-4)",
+  Vencidos: "var(--color-chart-1)",
 };
 
 const FEE_COLORS = {
-  "30 €": "hsl(var(--chart-3))",
-  "35 €": "hsl(var(--chart-5))",
+  "30 €": "var(--color-chart-3)",
+  "35 €": "var(--color-chart-5)",
 };
 
 export function OverviewCharts({ members }: OverviewChartsProps) {
@@ -115,8 +115,8 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
                 </Pie>
                 <Tooltip
                   contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
+                    background: "var(--color-card)",
+                    border: "1px solid var(--color-border)",
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
@@ -144,26 +144,26 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
             <BarChart data={feeData} barSize={14}>
               <CartesianGrid
                 strokeDasharray="3 3"
-                stroke="hsl(var(--border))"
+                stroke="var(--color-border)"
                 vertical={false}
               />
               <XAxis
                 dataKey="mes"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
                 width={24}
               />
               <Tooltip
                 contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  background: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}

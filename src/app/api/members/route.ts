@@ -1,13 +1,7 @@
-import { auth } from "@/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { memberSchema } from "@/lib/schemas/member";
 import { NextResponse } from "next/server";
-
-async function requireAuth() {
-  const session = await auth();
-  if (!session) return null;
-  return session;
-}
 
 export async function GET() {
   const session = await requireAuth();

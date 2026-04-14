@@ -59,7 +59,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       </SidebarHeader>
 
       {/* Navigation */}
-      <SidebarContent className="pt-2">
+      <SidebarContent className="pt-3">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -73,6 +73,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       render={<Link href={href} />}
                       isActive={isActive}
                       tooltip={label}
+                      className={
+                        isActive
+                          ? "bg-primary/15 text-primary border border-primary/20 font-semibold"
+                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                      }
                     >
                       <Icon aria-hidden="true" />
                       <span>{label}</span>
