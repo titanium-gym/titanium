@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+# Cancel stale runs on the same PR branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-unit:
+    name: Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+        env:
+          EXPIRY_WARNING_DAYS: "3"
+
+  # E2E tests require Google OAuth redirect + real Supabase DB — cannot run
+  # reliably in headless CI. Run locally with: npm run test:e2e
+  # If you add a test Supabase project and mock OAuth in the future, re-enable.
+  #
+  # test-e2e: (disabled)
