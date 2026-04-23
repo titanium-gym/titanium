@@ -15,7 +15,7 @@ describe("Project Structure", () => {
       "package.json",
       "next.config.ts",
       "tsconfig.json",
-      ".env.local",
+      ".env.example",
       "playwright.config.ts",
       "vitest.config.ts",
     ];
@@ -123,17 +123,17 @@ describe("File Content Validation", () => {
     expect(content).toContain('redirect("/login")');
   });
 
-  it(".env.local contains BYPASS_AUTH", () => {
+  it(".env.example contains BYPASS_AUTH", () => {
     const content = fs.readFileSync(
-      path.join(projectRoot, ".env.local"),
+      path.join(projectRoot, ".env.example"),
       "utf-8"
     );
     expect(content).toContain("BYPASS_AUTH");
   });
 
-  it(".env.local contains SUPABASE_URL", () => {
+  it(".env.example contains SUPABASE_URL", () => {
     const content = fs.readFileSync(
-      path.join(projectRoot, ".env.local"),
+      path.join(projectRoot, ".env.example"),
       "utf-8"
     );
     expect(content).toContain("SUPABASE_URL");
