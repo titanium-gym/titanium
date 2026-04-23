@@ -1,5 +1,8 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "@/auth.config";
 import { NextRequest, NextResponse } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 // ---------------------------------------------------------------------------
 // Content Security Policy — generated per-request so we can embed a nonce.
