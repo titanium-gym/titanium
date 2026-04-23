@@ -56,12 +56,12 @@ jobs:
         run: npm run build
         env:
           BYPASS_AUTH: "false"
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          SUPABASE_MOCK: "true"
+          NEXTAUTH_SECRET: "ci-build-placeholder-not-for-production"
           NEXTAUTH_URL: http://localhost:3000
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CLIENT_ID: "ci-placeholder"
+          GOOGLE_CLIENT_SECRET: "ci-placeholder"
+          ALLOWED_EMAIL: "ci@example.com"
 
   test-e2e:
     name: E2E Tests (Playwright)
@@ -93,6 +93,7 @@ jobs:
         run: npm run test:e2e
         env:
           BYPASS_AUTH: "true"
+          SUPABASE_MOCK: "true"
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: "ci-e2e-placeholder-not-for-production"
 
