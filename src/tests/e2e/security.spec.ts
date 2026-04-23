@@ -64,12 +64,14 @@ test.describe("Security - Info Disclosure Prevention", () => {
   });
 
   test("login page does not leak allowed email", async ({ page }) => {
+    const allowedEmail = process.env.ALLOWED_EMAIL;
+    if (!allowedEmail) {
+      test.skip(true, "ALLOWED_EMAIL not configured in test environment");
+      return;
+    }
     await page.goto("/login");
     const html = await page.content();
-
-    // Should not contain environment-specific email addresses
-    const hasAllowedEmail = html.includes(process.env.ALLOWED_EMAIL || "");
-    expect(hasAllowedEmail).toBe(false);
+    expect(html).not.toContain(allowedEmail);
   });
 
   test("404 page does not expose internal routes", async ({ page }) => {
