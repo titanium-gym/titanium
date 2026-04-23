@@ -91,7 +91,7 @@ export function EditMemberDialog({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <MemberFormFields form={form} autoExpiry={open} />
+            <MemberFormFields form={form} autoExpiry={false} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar

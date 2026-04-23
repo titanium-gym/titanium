@@ -29,6 +29,7 @@ cp .env.example .env.local
 | `ALLOWED_EMAIL` | Single authorized Google account |
 | `SUPABASE_URL` | Supabase → Settings → API |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API |
+| `BYPASS_AUTH` | `true` for local dev (skips OAuth) |
 | `RESEND_API_KEY` | resend.com → API Keys |
 | `OWNER_EMAIL` | Receives expiry notifications |
 | `EXPIRY_WARNING_DAYS` | Days ahead to warn (e.g. `3`) |
@@ -36,19 +37,46 @@ cp .env.example .env.local
 
 ### Database migration
 
-Run `supabase/migrations/000_consolidated.sql` in the Supabase SQL Editor.
+Run these scripts in order in the Supabase SQL Editor:
+1. `supabase/drop-all.sql` — Clean slate
+2. `supabase/migrations/001_complete_schema.sql` — Schema + RLS + triggers
+3. `supabase/seed_demo.sql` — Load 100 demo socios
 
 ### Google OAuth redirect URIs
 
 - Local: `http://localhost:3000/api/auth/callback/google`
 - Production: `https://<your-domain>/api/auth/callback/google`
 
-### Local dev
+## Testing
 
+### Local: Unit tests (Vitest)
 ```bash
-npm install
-npm run dev
+npm test
 ```
+Runs 45 tests covering routing, project structure, member schema, and expiry logic.
+
+### Local: E2E tests (Playwright)
+```bash
+# First terminal: start the dev server
+npm run dev
+
+# Second terminal: run E2E tests
+npm run test:e2e
+```
+Tests critical user flows: login, dashboard, API endpoints.
+
+### Both at once
+```bash
+./scripts/test-all.sh
+```
+
+### GitHub Actions
+Runs on every PR to `main`:
+- ✅ Unit tests (Vitest) — 45 tests
+- ✅ Type check (tsc)
+- ✅ Build (npm run build)
+
+See [TESTING.md](TESTING.md) for detailed instructions.
 
 ## Commands
 
@@ -59,6 +87,7 @@ npm run dev
 | `npm test` | Unit tests (Vitest) |
 | `npm run test:e2e` | E2E tests (Playwright) |
 | `npm run lint` | Lint |
+| `./scripts/test-all.sh` | Run all tests locally |
 
 ## Deployment & GitHub Secrets
 
@@ -66,4 +95,4 @@ See [docs/deployment.md](docs/deployment.md) — includes Vercel setup, GitHub A
 
 ## Security
 
-See [docs/security.md](docs/security.md)
+See [docs/security.md](docs/security.md).

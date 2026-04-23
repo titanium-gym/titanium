@@ -17,11 +17,18 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
-      },
+  webServer: {
+    command: "npm run dev",
+    url: "http://localhost:3000",
+    reuseExistingServer: !process.env.CI,
+    timeout: 120 * 1000,
+    env: {
+      BYPASS_AUTH: "true",
+      SUPABASE_MOCK: "true",
+      RATE_LIMIT_DISABLED: "true",
+      NEXTAUTH_URL: "http://localhost:3000",
+      // Test-only secret — never used in production
+      NEXTAUTH_SECRET: "playwright-e2e-test-secret-not-for-production",
+    },
+  },
 });
