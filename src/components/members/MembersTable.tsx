@@ -143,12 +143,14 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
   function handleSearchChange(value: string) {
     setSearch(value);
     setPage(1);
+    setSelectedIds(new Set());
     updateUrl(value, statusFilter, 1);
   }
 
   function handleStatusChange(value: StatusFilter) {
     setStatusFilter(value);
     setPage(1);
+    setSelectedIds(new Set());
     updateUrl(search, value, 1);
   }
 

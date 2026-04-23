@@ -4,11 +4,9 @@ Portal web privado para gestión de socios. Login exclusivo con Google OAuth res
 
 ## Stack
 
-- **Next.js 14** (App Router) — desplegado en Vercel
+- **Next.js 15** (App Router) — desplegado en Vercel
 - **NextAuth v5** — Google OAuth, whitelist de email único
 - **Supabase** (PostgreSQL + RLS) — solo accedido desde el servidor
-- **Resend** — email transaccional para avisos de vencimiento
-- **Vercel Cron** — job diario a las 08:00 UTC
 - **shadcn/ui + Tailwind CSS** — UI del panel interno
 - **Vitest** — tests unitarios | **Playwright** — tests E2E
 
@@ -19,7 +17,6 @@ Portal web privado para gestión de socios. Login exclusivo con Google OAuth res
 - Node.js 20+
 - Proyecto en Supabase (con migración aplicada)
 - Credenciales OAuth de Google Cloud
-- Cuenta en Resend
 
 ### 2. Variables de entorno
 

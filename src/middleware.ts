@@ -20,6 +20,7 @@ function buildCsp(nonce: string): string {
       ? "connect-src 'self' https://accounts.google.com https://*.supabase.co"
       : "connect-src 'self' ws: wss: https://accounts.google.com https://*.supabase.co",
     "frame-src https://accounts.google.com",
+    "frame-ancestors 'none'",
     "form-action 'self' https://accounts.google.com",
     "base-uri 'self'",
   ].join("; ");
@@ -118,7 +119,7 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    // Exclude: NextAuth callbacks, static assets, cron (uses its own CRON_SECRET)
-    "/((?!api/auth|api/cron|_next/static|_next/image|favicon.ico).*)",
+    // Exclude: NextAuth callbacks, static assets
+    "/((?!api/auth|_next/static|_next/image|favicon.ico).*)",
   ],
 };
