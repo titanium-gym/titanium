@@ -126,16 +126,22 @@ test.describe("Dashboard - No Console Errors", () => {
 test.describe("Dashboard - Complete CRUD Workflow", () => {
   test("full CRUD operations work end-to-end", async ({ page }) => {
     await setupApiMocks(page);
+    await page.goto("/dashboard");
 
     // CREATE
-    const createRes = await page.request.post("/api/members", {
-      data: {
-        full_name: "Test Member",
-        fee_amount: 30,
-        paid_at: "2025-01-01",
-      },
+    const createStatus = await page.evaluate(async () => {
+      const res = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: "Test Member",
+          fee_amount: 30,
+          paid_at: "2025-01-01",
+        }),
+      });
+      return res.status;
     });
-    expect([200, 201]).toContain(createRes.status());
+    expect([200, 201]).toContain(createStatus);
 
     // READ
     const readRes = await page.request.get("/api/members");
@@ -146,14 +152,26 @@ test.describe("Dashboard - Complete CRUD Workflow", () => {
     // UPDATE
     if (Array.isArray(members) && members.length > 0) {
       const member = members[0] as Record<string, unknown>;
-      const updateRes = await page.request.put(`/api/members/${member.id}`, {
-        data: { full_name: "Updated Member" },
-      });
-      expect([200, 201]).toContain(updateRes.status());
+      const memberId = member.id as string;
+
+      const updateStatus = await page.evaluate(async (id: string) => {
+        const res = await fetch(`/api/members/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ full_name: "Updated Member" }),
+        });
+        return res.status;
+      }, memberId);
+      expect([200, 201]).toContain(updateStatus);
 
       // DELETE
-      const deleteRes = await page.request.delete(`/api/members/${member.id}`);
-      expect([200, 204]).toContain(deleteRes.status());
+      const deleteStatus = await page.evaluate(async (id: string) => {
+        const res = await fetch(`/api/members/${id}`, {
+          method: "DELETE",
+        });
+        return res.status;
+      }, memberId);
+      expect([200, 204]).toContain(deleteStatus);
     }
   });
 });

@@ -88,7 +88,7 @@ test.describe("API Routes", () => {
     const first = data[0];
 
     // Validate types
-    expect(typeof first.id).toBe("number");
+    expect(typeof first.id).toBe("string");
     expect(typeof first.full_name).toBe("string");
     expect(typeof first.fee_amount).toBe("number");
     expect(typeof first.paid_at).toBe("string");

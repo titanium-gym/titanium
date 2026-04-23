@@ -63,34 +63,52 @@ test.describe("Member API - CRUD Operations with Mocks", () => {
 
   test("POST /api/members creates new member", async ({ page }) => {
     await setupApiMocks(page);
-    const res = await page.request.post("/api/members", {
-      data: {
-        full_name: "New Socio",
-        fee_amount: 30,
-        paid_at: "2024-01-01",
-      },
+    await page.goto("/dashboard");
+    const status = await page.evaluate(async () => {
+      const res = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: "New Socio",
+          fee_amount: 30,
+          paid_at: "2024-01-01",
+        }),
+      });
+      return res.status;
     });
 
-    expect([200, 201]).toContain(res.status());
+    expect([200, 201]).toContain(status);
   });
 
   test("PUT /api/members/:id updates member", async ({ page }) => {
     await setupApiMocks(page);
-    const res = await page.request.put("/api/members/1", {
-      data: {
-        full_name: "Updated",
-        fee_amount: 35,
-      },
+    await page.goto("/dashboard");
+    const status = await page.evaluate(async () => {
+      const res = await fetch("/api/members/00000000-0000-0000-0000-000000000001", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          full_name: "Updated",
+          fee_amount: 35,
+        }),
+      });
+      return res.status;
     });
 
-    expect([200, 201]).toContain(res.status());
+    expect([200, 201]).toContain(status);
   });
 
   test("DELETE /api/members/:id deletes member", async ({ page }) => {
     await setupApiMocks(page);
-    const res = await page.request.delete("/api/members/1");
+    await page.goto("/dashboard");
+    const status = await page.evaluate(async () => {
+      const res = await fetch("/api/members/00000000-0000-0000-0000-000000000001", {
+        method: "DELETE",
+      });
+      return res.status;
+    });
 
-    expect([200, 204]).toContain(res.status());
+    expect([200, 204]).toContain(status);
   });
 });
 

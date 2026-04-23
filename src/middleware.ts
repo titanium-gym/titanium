@@ -92,7 +92,11 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const limit = getLimit(pathname, req.method);
 
-  if (!allow(ip, limit)) {
+  const rateLimitDisabled =
+    process.env.NODE_ENV !== "production" &&
+    process.env.RATE_LIMIT_DISABLED === "true";
+
+  if (!rateLimitDisabled && !allow(ip, limit)) {
     const isApi = pathname.startsWith("/api/");
     if (isApi) {
       return NextResponse.json(

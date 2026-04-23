@@ -94,6 +94,7 @@ jobs:
         env:
           BYPASS_AUTH: "true"
           SUPABASE_MOCK: "true"
+          RATE_LIMIT_DISABLED: "true"
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: "ci-e2e-placeholder-not-for-production"
 
