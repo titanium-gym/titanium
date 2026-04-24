@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
+  Label,
 } from "recharts";
 import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -22,6 +23,39 @@ import type { Member } from "@/lib/supabase";
 
 interface OverviewChartsProps {
   members: Member[];
+}
+
+interface DonutCenterLabelProps {
+  viewBox?: { cx?: number; cy?: number };
+  total: number;
+  activePct: number;
+}
+
+function DonutCenterLabel({ viewBox, total, activePct }: DonutCenterLabelProps) {
+  const cx = viewBox?.cx ?? 0;
+  const cy = viewBox?.cy ?? 0;
+  return (
+    <g>
+      <text
+        x={cx}
+        y={cy - 9}
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ fill: "var(--color-foreground)", fontSize: 24, fontWeight: 900 }}
+      >
+        {total}
+      </text>
+      <text
+        x={cx}
+        y={cy + 13}
+        textAnchor="middle"
+        dominantBaseline="central"
+        style={{ fill: "var(--color-muted-foreground)", fontSize: 11 }}
+      >
+        {activePct}% activos
+      </text>
+    </g>
+  );
 }
 
 const STATUS_COLORS = {
@@ -76,11 +110,15 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
   }, [members]);
 
   const hasAnyStatus = statusData.some((d) => d.value > 0);
+  const activePct =
+    members.length > 0
+      ? Math.round(((statusData.find((d) => d.name === "Activos")?.value ?? 0) / members.length) * 100)
+      : 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {/* Donut — estado actual */}
-      <Card className="bg-card/50 border-border/60">
+      <Card className="bg-gradient-to-br from-white/[0.03] via-card/60 to-transparent border-border/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Estado actual
@@ -98,19 +136,28 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
                   data={statusData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
+                  innerRadius={58}
+                  outerRadius={84}
                   paddingAngle={3}
                   dataKey="value"
+                  strokeWidth={0}
                 >
                   {statusData.map((entry) => (
                     <Cell
                       key={entry.name}
-                      fill={
-                        STATUS_COLORS[entry.name as keyof typeof STATUS_COLORS]
-                      }
+                      fill={STATUS_COLORS[entry.name as keyof typeof STATUS_COLORS]}
                     />
                   ))}
+                  <Label
+                    content={(props) => (
+                      <DonutCenterLabel
+                        viewBox={props.viewBox as { cx: number; cy: number }}
+                        total={members.length}
+                        activePct={activePct}
+                      />
+                    )}
+                    position="center"
+                  />
                 </Pie>
                 <Tooltip
                   contentStyle={{
@@ -132,7 +179,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
       </Card>
 
       {/* Bar — ingresos por cuota (últimos 6 meses) */}
-      <Card className="bg-card/50 border-border/60">
+      <Card className="bg-gradient-to-br from-white/[0.03] via-card/60 to-transparent border-border/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
             Ingresos · últimos 6 meses
@@ -140,7 +187,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={feeData} barSize={14}>
+            <BarChart data={feeData} barSize={16}>
               <CartesianGrid
                 strokeDasharray="3 3"
                 stroke="var(--color-border)"
@@ -178,7 +225,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
                 wrapperStyle={{ fontSize: "12px" }}
               />
               {Object.entries(FEE_COLORS).map(([key, color]) => (
-                <Bar key={key} dataKey={key} fill={color} radius={[3, 3, 0, 0]} />
+                <Bar key={key} dataKey={key} fill={color} radius={[4, 4, 0, 0]} />
               ))}
             </BarChart>
           </ResponsiveContainer>

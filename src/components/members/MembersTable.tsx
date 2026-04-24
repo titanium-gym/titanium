@@ -46,22 +46,54 @@ type StatusFilter = "all" | "active" | "expiring-soon" | "expired";
 type SortField = "full_name" | "expires_at" | "fee_amount" | "paid_at";
 type SortDir = "asc" | "desc";
 
+function getInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((w) => w[0] ?? "")
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+const AVATAR_COLORS = [
+  "bg-rose-600/80",
+  "bg-orange-600/80",
+  "bg-amber-600/80",
+  "bg-emerald-600/80",
+  "bg-sky-600/80",
+  "bg-violet-600/80",
+  "bg-pink-600/80",
+  "bg-teal-600/80",
+];
+
+function getAvatarColor(name: string): string {
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = ((h * 31) + name.charCodeAt(i)) | 0;
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+}
+
 function StatusBadge({ expiresAt }: { expiresAt: string }) {
   const status = getExpiryStatus(expiresAt);
   if (status === "expired")
     return (
-      <Badge className="bg-primary/15 text-primary border-primary/25 text-[11px] font-semibold">
+      <Badge className="bg-primary/15 text-primary border-primary/25 text-[11px] font-semibold gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
         Vencido
       </Badge>
     );
   if (status === "expiring-soon")
     return (
-      <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/25 text-[11px] font-semibold">
+      <Badge className="bg-yellow-500/15 text-yellow-400 border-yellow-500/25 text-[11px] font-semibold gap-1.5">
+        <span className="relative flex w-1.5 h-1.5 shrink-0">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75" />
+          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-yellow-400" />
+        </span>
         Vence pronto
       </Badge>
     );
   return (
-    <Badge className="bg-green-500/15 text-green-400 border-green-500/25 text-[11px] font-semibold">
+    <Badge className="bg-green-500/15 text-green-400 border-green-500/25 text-[11px] font-semibold gap-1.5">
+      <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
       Activo
     </Badge>
   );
@@ -427,8 +459,8 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                           selectedIds.has(member.id)
                             ? "bg-primary/8 hover:bg-primary/12"
                             : isExpired
-                            ? "opacity-60 hover:opacity-80 hover:bg-white/[0.02]"
-                            : "hover:bg-white/[0.03]"
+                            ? "opacity-60 hover:opacity-100 hover:bg-gradient-to-r hover:from-white/[0.02] hover:to-transparent"
+                            : "hover:bg-gradient-to-r hover:from-white/[0.04] hover:to-transparent"
                         }`}
                       >
                         <TableCell className="pl-4">
@@ -439,13 +471,20 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                           />
                         </TableCell>
                         <TableCell className="font-medium text-foreground">
-                          <div>
-                            <span>{member.full_name}</span>
-                            {member.notes && (
-                              <p className="text-xs text-muted-foreground truncate max-w-[180px] mt-0.5" title={member.notes}>
-                                {member.notes}
-                              </p>
-                            )}
+                          <div className="flex items-center gap-2.5">
+                            <div
+                              className={`w-7 h-7 rounded-full ${getAvatarColor(member.full_name)} flex items-center justify-center text-[10px] font-bold text-white shrink-0`}
+                            >
+                              {getInitials(member.full_name)}
+                            </div>
+                            <div>
+                              <span>{member.full_name}</span>
+                              {member.notes && (
+                                <p className="text-xs text-muted-foreground truncate max-w-[180px] mt-0.5" title={member.notes}>
+                                  {member.notes}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">

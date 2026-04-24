@@ -117,12 +117,25 @@ export function PurgePanel() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-5 max-w-2xl">
+      {/* Danger zone banner */}
+      <div className="rounded-xl border border-destructive/30 bg-gradient-to-r from-destructive/12 to-destructive/5 px-4 py-3.5 flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-destructive/20 border border-destructive/30 flex items-center justify-center shrink-0 shadow-[0_0_16px_-2px_oklch(0.62_0.22_27_/_0.4)] mt-0.5">
+          <TriangleAlert className="w-4.5 h-4.5 text-destructive" aria-hidden="true" />
+        </div>
+        <div>
+          <p className="text-sm font-bold text-foreground">Zona de peligro</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Los socios eliminados no se pueden recuperar. Esta acción es permanente e irreversible.
+          </p>
+        </div>
+      </div>
+
       {/* Config card */}
-      <Card className="border-border/60 bg-card/50">
+      <Card className="border-destructive/20 bg-gradient-to-br from-destructive/5 to-transparent">
         <CardHeader className="pb-4">
           <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-            <UserX className="w-3.5 h-3.5" aria-hidden="true" />
+            <UserX className="w-3.5 h-3.5 text-destructive" aria-hidden="true" />
             Umbral de vencimiento
           </CardTitle>
         </CardHeader>
