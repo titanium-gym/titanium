@@ -205,12 +205,12 @@ export function PurgePanel() {
                         size="sm"
                         className="gap-1.5 h-8"
                         disabled={deleting}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                        {deleting ? "Eliminando…" : `Eliminar ${preview.length}`}
-                      </Button>
+                      />
                     }
-                  />
+                  >
+                    <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    {deleting ? "Eliminando…" : `Eliminar ${preview.length}`}
+                  </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar {preview.length} {preview.length === 1 ? "socio" : "socios"}?</AlertDialogTitle>

@@ -21,28 +21,8 @@ function nextMonth(): string {
  * Intercepts /api/members calls and returns mock data
  */
 export async function setupApiMocks(page: Page) {
-  // Intercept purge route BEFORE the catch-all to avoid being shadowed
-  await page.route("**/api/members/purge**", async (route) => {
-    const request = route.request();
-    const method = request.method();
-    if (method === "GET") {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ members: [mockMembers[0], mockMembers[1]], count: 2 }),
-      });
-    } else if (method === "POST") {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ deleted: 2 }),
-      });
-    } else {
-      await route.continue();
-    }
-  });
-
   // Intercept individual member routes: /api/members/:id and /api/members/:id/renew
+  // NOTE: Playwright routes are LIFO — register general routes first, specific routes last
   await page.route("**/api/members/**", async (route) => {
     const request = route.request();
     const url = request.url();
@@ -119,6 +99,27 @@ export async function setupApiMocks(page: Page) {
         status: 201,
         contentType: "application/json",
         body: JSON.stringify(newMember),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
+  // Register purge route LAST so it takes priority over the catch-all above (Playwright is LIFO)
+  await page.route("**/api/members/purge**", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    if (method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ members: [mockMembers[0], mockMembers[1]], count: 2 }),
+      });
+    } else if (method === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ deleted: 2 }),
       });
     } else {
       await route.continue();
