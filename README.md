@@ -8,7 +8,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://titanium-gold.vercel.app)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
 </div>
 
@@ -157,4 +157,4 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 
 ## License
 
-This project is licensed under the [GNU General Public License v3.0](LICENSE).
+Copyright (c) 2026 titanium-gym. All rights reserved. See [LICENSE](LICENSE).
