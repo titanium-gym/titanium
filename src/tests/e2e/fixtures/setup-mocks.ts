@@ -21,6 +21,27 @@ function nextMonth(): string {
  * Intercepts /api/members calls and returns mock data
  */
 export async function setupApiMocks(page: Page) {
+  // Intercept purge route BEFORE the catch-all to avoid being shadowed
+  await page.route("**/api/members/purge**", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    if (method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ members: [mockMembers[0], mockMembers[1]], count: 2 }),
+      });
+    } else if (method === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ deleted: 2 }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
+
   // Intercept individual member routes: /api/members/:id and /api/members/:id/renew
   await page.route("**/api/members/**", async (route) => {
     const request = route.request();
@@ -109,6 +130,7 @@ export async function setupApiMocks(page: Page) {
  * Disable API mocks (use real API)
  */
 export async function disableApiMocks(page: Page) {
+  await page.unroute("**/api/members/purge**");
   await page.unroute("**/api/members/**");
   await page.unroute("**/api/members");
 }

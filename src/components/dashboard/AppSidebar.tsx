@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Dumbbell } from "lucide-react";
+import { LayoutDashboard, Users, Dumbbell, UserX } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ interface AppSidebarProps {
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/socios", label: "Socios", icon: Users, exact: false },
+  { href: "/dashboard/depuracion", label: "Depuración", icon: UserX, exact: false },
 ];
 
 export function AppSidebar({ user }: AppSidebarProps) {

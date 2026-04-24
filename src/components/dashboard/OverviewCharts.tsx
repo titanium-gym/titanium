@@ -14,6 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { parseISO, format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExpiryStatus } from "@/lib/utils/expiry";
 import type { Member } from "@/lib/supabase";
@@ -50,23 +52,20 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
     const now = new Date();
 
     for (const m of members) {
-      const month = new Date(m.paid_at).toLocaleDateString("es-ES", {
-        month: "short",
-        year: "2-digit",
-      });
+      // Use parseISO so date-only strings stay in local time (avoids UTC midnight → day-before shift)
+      const month = format(parseISO(m.paid_at), "MMM yy", { locale: es });
       if (!buckets[month]) buckets[month] = { "30 €": 0, "35 €": 0 };
       const fee = Number(m.fee_amount);
-      if (fee === 30) buckets[month]["30 €"]++;
-      else buckets[month]["35 €"]++;
+      // Sum euros, not count members
+      if (fee === 30) buckets[month]["30 €"] += fee;
+      else buckets[month]["35 €"] += fee;
     }
 
     // Last 6 months in order
     const months = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(
-        d.toLocaleDateString("es-ES", { month: "short", year: "2-digit" })
-      );
+      months.push(format(d, "MMM yy", { locale: es }));
     }
 
     return months.map((m) => ({
@@ -132,11 +131,11 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Bar — distribución por cuota (últimos 6 meses) */}
+      {/* Bar — ingresos por cuota (últimos 6 meses) */}
       <Card className="bg-card/50 border-border/60">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-            Pagos por cuota · últimos 6 meses
+            Ingresos · últimos 6 meses
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -155,12 +154,17 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
               />
               <YAxis
                 allowDecimals={false}
+                tickFormatter={(v: number) => `${v}€`}
                 tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
                 axisLine={false}
                 tickLine={false}
-                width={24}
+                width={36}
               />
               <Tooltip
+                formatter={(value) => {
+                  const v = value != null ? Number(value) : 0;
+                  return `${v}€`;
+                }}
                 contentStyle={{
                   background: "var(--color-card)",
                   border: "1px solid var(--color-border)",
