@@ -22,6 +22,7 @@ function nextMonth(): string {
  */
 export async function setupApiMocks(page: Page) {
   // Intercept individual member routes: /api/members/:id and /api/members/:id/renew
+  // NOTE: Playwright routes are LIFO — register general routes first, specific routes last
   await page.route("**/api/members/**", async (route) => {
     const request = route.request();
     const url = request.url();
@@ -103,12 +104,34 @@ export async function setupApiMocks(page: Page) {
       await route.continue();
     }
   });
+
+  // Register purge route LAST so it takes priority over the catch-all above (Playwright is LIFO)
+  await page.route("**/api/members/purge**", async (route) => {
+    const request = route.request();
+    const method = request.method();
+    if (method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ members: [mockMembers[0], mockMembers[1]], count: 2 }),
+      });
+    } else if (method === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ deleted: 2 }),
+      });
+    } else {
+      await route.continue();
+    }
+  });
 }
 
 /**
  * Disable API mocks (use real API)
  */
 export async function disableApiMocks(page: Page) {
+  await page.unroute("**/api/members/purge**");
   await page.unroute("**/api/members/**");
   await page.unroute("**/api/members");
 }

@@ -55,5 +55,6 @@
     "typescript": "^5",
     "vitest": "^4.1.4",
     "wait-on": "^9.0.5"
-  }
+  },
+  "license": "UNLICENSED"
 }

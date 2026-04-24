@@ -1,65 +1,69 @@
-# Arquitectura de Seguridad
+# Security Architecture
 
-## Autenticación
+## Authentication
 
-- **Google OAuth exclusivo**: No existe registro propio, no hay formularios de usuario/contraseña.
-- **Whitelist de email**: El callback `signIn` de NextAuth compara `profile.email` con `ALLOWED_EMAIL`. Cualquier otro email es rechazado en el servidor, antes de crear sesión.
-- **JWT firmado**: Las sesiones usan JWT firmado con `NEXTAUTH_SECRET` (mínimo 32 chars). Sin NEXTAUTH_SECRET válido, los tokens son inválidos.
-- **Expiración de sesión**: 24 horas. Tras expiración, el middleware redirige a `/login`.
+- **Google OAuth only** — no self-registration, no username/password forms.
+- **Email allowlist** — NextAuth's `signIn` callback compares `profile.email` to `ALLOWED_EMAIL`. Any other account is rejected server-side before a session is created.
+- **Signed JWT** — sessions use JWTs signed with `NEXTAUTH_SECRET` (minimum 32 chars). Without a valid secret, all tokens are invalid.
+- **Session expiry** — 24 hours. After expiry the middleware redirects to `/login`.
 
-## Protección de rutas
+## Route Protection
 
-El middleware de Next.js (`src/middleware.ts`) intercepta **todas las requests** antes de que lleguen a cualquier componente o API Route:
+The Next.js middleware (`src/middleware.ts`) intercepts **all requests** before they reach any page or API route:
 
 ```
-Request → Middleware → ¿Sesión válida? → Sí → Contenido
-                                       → No → Redirect /login
+Request → Middleware → Valid session? → Yes → Content
+                                      → No  → Redirect /login
 ```
 
-Rutas públicas (no protegidas):
+Public routes (not protected):
 - `/login`
-- `/api/auth/*` (callbacks de NextAuth)
-- Assets estáticos (`_next/static`, `_next/image`, etc.)
+- `/api/auth/*` (NextAuth callbacks)
+- Static assets (`_next/static`, `_next/image`, etc.)
 
-## Base de datos
+## Database
 
-- **Supabase nunca se accede desde el cliente**: Solo desde API Routes de Next.js usando `SUPABASE_SERVICE_ROLE_KEY`.
-- **RLS habilitado**: Row Level Security activo en ambas tablas. Sin políticas públicas — el `service_role` bypasea RLS.
-- **La `SUPABASE_SERVICE_ROLE_KEY` es una variable de servidor**: Nunca se incluye en el bundle del cliente.
+- **Supabase is never accessed from the client** — only from Next.js API routes using `SUPABASE_SERVICE_ROLE_KEY`.
+- **RLS enabled** — Row Level Security is active on all tables. There are no public policies; the `service_role` key bypasses RLS on the server.
+- **`SUPABASE_SERVICE_ROLE_KEY` is a server-only variable** — it is never bundled into the client.
 
-## Endpoint del cron
+## Cron Endpoint
 
-`/api/cron/check-expiry` verifica el header `Authorization: Bearer <CRON_SECRET>` en cada invocación. Sin este header, responde `401` sin ejecutar lógica.
+`/api/cron/check-expiry` validates an `Authorization: Bearer <CRON_SECRET>` header on every invocation. Without this header it returns `401` without executing any logic.
 
-## Headers de seguridad HTTP
+## HTTP Security Headers
 
-Configurados en `next.config.ts`:
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- `X-XSS-Protection: 1; mode=block`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Content-Security-Policy` — restringe orígenes de scripts, estilos e imágenes
+Configured in `next.config.ts` (static headers applied to all routes):
 
-## Página de login
+| Header | Value |
+|--------|-------|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
 
-La página `/login` está diseñada para no revelar información sobre el sistema:
-- Sin referencias a "Next.js", "Supabase", "dashboard" ni rutas internas
-- CSS inline (no imports de shadcn/ui que fingerprinting de librería)
-- Solo muestra el botón de Google
+The middleware adds a per-request **CSP nonce** via `src/middleware.ts`, and applies an **in-memory IP-based rate limiter** to all non-auth, non-cron routes.
 
-## Variables de entorno sensibles
+## Login Page Disclosure
 
-| Variable | Nivel de sensibilidad | Notas |
-|----------|----------------------|-------|
-| `NEXTAUTH_SECRET` | 🔴 Crítico | Firma todos los JWT. Rotar si se compromete |
-| `SUPABASE_SERVICE_ROLE_KEY` | 🔴 Crítico | Acceso total a la BD. Solo en servidor |
-| `GOOGLE_CLIENT_SECRET` | 🔴 Crítico | Nunca exponer en cliente |
-| `CRON_SECRET` | 🟡 Alto | Protege el endpoint del cron |
-| `RESEND_API_KEY` | 🟡 Alto | Solo en servidor |
+The `/login` page is designed to minimise information leakage:
+- No references to "Next.js", "Supabase", "dashboard", or internal routes.
+- Only a Google OAuth button is exposed — no hints about the underlying stack.
 
-## Generación de secrets
+## Sensitive Environment Variables
+
+| Variable | Sensitivity | Notes |
+|----------|-------------|-------|
+| `NEXTAUTH_SECRET` | 🔴 Critical | Signs all JWTs. Rotate immediately if compromised |
+| `SUPABASE_SERVICE_ROLE_KEY` | 🔴 Critical | Full database access. Server-only, never expose to client |
+| `GOOGLE_CLIENT_SECRET` | 🔴 Critical | Never expose to the client |
+| `CRON_SECRET` | 🟡 High | Secures the cron endpoint |
+| `RESEND_API_KEY` | 🟡 High | Server-only |
+
+## Generating Secrets
 
 ```bash
-# NEXTAUTH_SECRET y CRON_SECRET
+# NEXTAUTH_SECRET and CRON_SECRET
 openssl rand -base64 32
 ```

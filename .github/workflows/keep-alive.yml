@@ -13,9 +13,16 @@ jobs:
     name: Ping Supabase DB
     runs-on: ubuntu-latest
     steps:
-      - name: Read one member row (keep-alive)
+      - name: Keep-alive — 25 read requests
         run: |
-          curl -f -s \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/members?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          BASE="${{ secrets.SUPABASE_URL }}/rest/v1/members"
+          KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          for i in $(seq 1 25); do
+            curl -f -s \
+              "${BASE}?select=id,full_name&limit=2&offset=$((i * 2))" \
+              -H "apikey: ${KEY}" \
+              -H "Authorization: Bearer ${KEY}" \
+              > /dev/null
+            sleep 1
+          done
+          echo "✅ 25 keep-alive requests completed"

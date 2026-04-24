@@ -66,9 +66,6 @@ export default async function LoginPage({
             </span>
             sin límites.
           </h1>
-          <p className="text-sm text-white/35 font-medium mt-4">
-            Portal privado · Acceso restringido
-          </p>
         </div>
       </div>
 
@@ -104,7 +101,7 @@ export default async function LoginPage({
             >
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-foreground text-background rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98] cursor-pointer shadow-lg shadow-black/30"
+                className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-foreground text-background rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 hover:scale-[1.02] hover:shadow-[0_4px_20px_oklch(0.62_0.22_27_/_0.25)] active:scale-[0.98] cursor-pointer shadow-lg shadow-black/30 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <svg
                   width="16"

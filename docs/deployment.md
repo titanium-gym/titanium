@@ -1,78 +1,82 @@
-# Guía de Despliegue
+# Deployment Guide
 
-## Checklist rápido (primer despliegue)
+## Quick Checklist (first deployment)
 
-- [ ] Supabase: ejecutar migración SQL
-- [ ] Google Cloud: añadir redirect URIs
-- [ ] Vercel: crear proyecto y configurar env vars
-- [ ] GitHub: añadir secrets para CI/CD
-- [ ] Push a `main` para deploy automático
+- [ ] Supabase: run SQL migration
+- [ ] Google Cloud: add redirect URIs
+- [ ] Vercel: create project and set environment variables
+- [ ] GitHub: add secrets for CI/CD
+- [ ] Push to `main` for automatic deployment
 
 ---
 
-## 1. Base de datos — Supabase
+## 1. Database — Supabase
 
-### Crear tablas (solo una vez por entorno)
+### Create tables (once per environment)
 
-Ve a [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql/new) y ejecuta el contenido de:
+Go to [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql/new) and run:
 
 ```
 supabase/migrations/001_complete_schema.sql
 ```
 
-> ⚠️ Las migraciones son **manuales** — no hay auto-migration en CI/CD.  
-> Cada vez que añadas una migración nueva, ejecútala manualmente en Supabase Dashboard.
+> ⚠️ Migrations are **manual** — there is no automated migration step in CI/CD.
+> Every time you add a new migration, run it manually in the Supabase Dashboard.
 
-### Obtener credenciales
+### Get credentials
 
-Ve a Supabase → Settings → API:
-- **`SUPABASE_URL`**: Project URL (ej: `https://xxxx.supabase.co`)
-- **`SUPABASE_SERVICE_ROLE_KEY`**: `service_role` key (nunca la expongas al cliente)
+Go to Supabase → Settings → API:
+- **`SUPABASE_URL`**: Project URL (e.g. `https://xxxx.supabase.co`)
+- **`SUPABASE_SERVICE_ROLE_KEY`**: `service_role` key — never expose to the client
 
 ---
 
 ## 2. Google OAuth
 
-### Crear credenciales (si no las tienes)
+### Create credentials
 
-1. Ve a [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
-2. Crear credencial → OAuth 2.0 Client ID → Web application
-3. Añadir **Authorized redirect URIs**:
+1. Go to [Google Cloud Console](https://console.cloud.google.com) → APIs & Services → Credentials
+2. Create credential → OAuth 2.0 Client ID → Web application
+3. Add **Authorized redirect URIs**:
 
-| Entorno | URI |
-|---------|-----|
+| Environment | URI |
+|-------------|-----|
 | Local | `http://localhost:3000/api/auth/callback/google` |
-| Producción | `https://tu-dominio.vercel.app/api/auth/callback/google` |
+| Production | `https://your-domain.vercel.app/api/auth/callback/google` |
 
 ---
 
-## 3. Vercel — primer despliegue
+## 3. Vercel — first deployment
 
-### Conectar proyecto
+### Link project
 
 ```bash
 npm i -g vercel
 vercel login
-vercel link   # vincula con tu proyecto existente o crea uno nuevo
+vercel link   # link to existing project or create a new one
 ```
 
-Tras ejecutar `vercel link`, se crea `.vercel/project.json` con `orgId` y `projectId`.
+Running `vercel link` creates `.vercel/project.json` with `orgId` and `projectId`.
 
-### Configurar variables de entorno
+### Configure environment variables
 
-Ve a Vercel Dashboard → tu proyecto → Settings → Environment Variables:
+Go to Vercel Dashboard → your project → Settings → Environment Variables:
 
-| Variable | Valor | Notas |
+| Variable | Value | Notes |
 |----------|-------|-------|
-| `NEXTAUTH_SECRET` | `openssl rand -base64 32` | Distinto al de local |
-| `NEXTAUTH_URL` | `https://tu-dominio.vercel.app` | Sin trailing slash |
-| `GOOGLE_CLIENT_ID` | De Google Cloud Console | |
-| `GOOGLE_CLIENT_SECRET` | De Google Cloud Console | |
-| `ALLOWED_EMAIL` | Tu email de Google | Único usuario autorizado |
-| `SUPABASE_URL` | De Supabase → Settings → API | |
-| `SUPABASE_SERVICE_ROLE_KEY` | De Supabase → Settings → API | |
+| `NEXTAUTH_SECRET` | `openssl rand -base64 32` | Use a different value than local |
+| `NEXTAUTH_URL` | `https://your-domain.vercel.app` | No trailing slash |
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console | |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console | |
+| `ALLOWED_EMAIL` | Your Google account email | Single authorized user |
+| `SUPABASE_URL` | From Supabase → Settings → API | |
+| `SUPABASE_SERVICE_ROLE_KEY` | From Supabase → Settings → API | |
+| `RESEND_API_KEY` | From resend.com → API Keys | |
+| `OWNER_EMAIL` | Notification recipient | |
+| `EXPIRY_WARNING_DAYS` | e.g. `3` | Days ahead to warn |
+| `CRON_SECRET` | `openssl rand -base64 32` | Secures the cron endpoint |
 
-### Primer deploy manual
+### First manual deploy
 
 ```bash
 vercel --prod
@@ -80,26 +84,33 @@ vercel --prod
 
 ---
 
-## 4. GitHub Actions — CI/CD automático
+## 4. GitHub Actions — CI/CD
 
-Configura los secrets en GitHub repo → Settings → Secrets and variables → Actions:
+Add secrets under GitHub repo → Settings → Secrets and variables → Actions:
 
-### Secrets necesarios (build y E2E)
-
-| Secret | Valor |
+| Secret | Value |
 |--------|-------|
-| `NEXTAUTH_SECRET` | Mismo que en Vercel |
-| `GOOGLE_CLIENT_ID` | Mismo que en Vercel |
-| `GOOGLE_CLIENT_SECRET` | Mismo que en Vercel |
-| `ALLOWED_EMAIL` | Mismo que en Vercel |
-| `SUPABASE_URL` | Mismo que en Vercel |
-| `SUPABASE_SERVICE_ROLE_KEY` | Mismo que en Vercel |
+| `NEXTAUTH_SECRET` | Same as Vercel |
+| `GOOGLE_CLIENT_ID` | Same as Vercel |
+| `GOOGLE_CLIENT_SECRET` | Same as Vercel |
+| `ALLOWED_EMAIL` | Same as Vercel |
+| `SUPABASE_URL` | Same as Vercel |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same as Vercel |
+| `CRON_SECRET` | Same as Vercel |
 
-### Flujo automático
+Also add these for the keep-alive workflow:
+
+| Secret | Value |
+|--------|-------|
+| `SUPABASE_URL` | Same as above |
+| `SUPABASE_SERVICE_ROLE_KEY` | Same as above |
+
+### Automatic flow
 
 ```
-PR abierto  → CI (unit tests + E2E) debe pasar
-Push a main → unit tests pasan → deploy a Vercel producción
+PR opened  → CI (unit tests + type check + build) must pass
+Push main  → tests pass → Vercel auto-deploys to production
+Daily cron → keep-alive.yml sends 25 read requests to prevent Supabase free-tier pause
 ```
 
 ---
@@ -107,10 +118,10 @@ Push a main → unit tests pasan → deploy a Vercel producción
 ## Rollback
 
 ```bash
-# Ver deploys recientes
+# List recent deployments
 vercel list
 
-# Promover un deploy anterior a producción
+# Promote a previous deployment to production
 vercel promote <deployment-url>
 ```
 
@@ -118,9 +129,8 @@ vercel promote <deployment-url>
 
 ## Troubleshooting
 
-| Error | Causa | Solución |
-|-------|-------|----------|
-| `redirect_uri_mismatch` | URI no registrada en Google Cloud | Añadir la URI exacta en OAuth credentials |
-| `Acceso no autorizado` | Email no coincide con `ALLOWED_EMAIL` | Verificar valor en Vercel env vars |
-| `Could not find table 'members'` | Migración no ejecutada | Correr `001_complete_schema.sql` en Supabase SQL Editor |
-
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `redirect_uri_mismatch` | URI not registered in Google Cloud | Add the exact URI in OAuth credentials |
+| `Unauthorized` on login | Email does not match `ALLOWED_EMAIL` | Verify the value in Vercel env vars |
+| `Could not find table 'members'` | Migration not run | Execute `001_complete_schema.sql` in Supabase SQL Editor |

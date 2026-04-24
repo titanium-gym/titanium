@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, Dumbbell } from "lucide-react";
+import { LayoutDashboard, Users, Dumbbell, UserX } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +25,7 @@ interface AppSidebarProps {
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Inicio", icon: LayoutDashboard, exact: true },
   { href: "/dashboard/socios", label: "Socios", icon: Users, exact: false },
+  { href: "/dashboard/depuracion", label: "Depuración", icon: UserX, exact: false },
 ];
 
 export function AppSidebar({ user }: AppSidebarProps) {
@@ -75,11 +76,14 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       tooltip={label}
                       className={
                         isActive
-                          ? "bg-primary/15 text-primary border border-primary/20 font-semibold"
-                          : "text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                          ? "relative bg-gradient-to-r from-primary/20 to-primary/5 text-primary font-semibold ring-1 ring-inset ring-primary/30 shadow-[0_2px_12px_-2px_oklch(0.62_0.22_27_/_0.35)] transition-all duration-200"
+                          : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-white/[0.05] transition-all duration-150"
                       }
                     >
-                      <Icon aria-hidden="true" />
+                      <Icon
+                        aria-hidden="true"
+                        className={isActive ? "drop-shadow-[0_0_5px_oklch(0.62_0.22_27_/_0.7)]" : ""}
+                      />
                       <span>{label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -93,7 +97,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
       {/* User footer */}
       <SidebarFooter className="border-t border-sidebar-border/60 p-3">
         <div className="flex items-center gap-2.5 min-w-0 overflow-hidden">
-          <div className="w-7 h-7 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-[11px] font-bold text-primary select-none shrink-0">
+          <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/40 ring-1 ring-primary/20 ring-offset-1 ring-offset-sidebar flex items-center justify-center text-[11px] font-bold text-primary select-none shrink-0">
             {initials}
           </div>
           <span className="text-xs text-sidebar-foreground/60 truncate group-data-[collapsible=icon]:hidden">
