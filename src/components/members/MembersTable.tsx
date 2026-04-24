@@ -119,8 +119,8 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
   const [page, setPage] = useState(() => Number(searchParams.get("page") ?? 1));
   const [sortField, setSortField] = useState<SortField>("expires_at");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
-  const [renewingId, setRenewingId] = useState<string | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [renewingId, setRenewingId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkRenewing, setBulkRenewing] = useState(false);
 
   const updateUrl = useCallback(
@@ -197,7 +197,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
       });
     }
   }
-  function toggleOne(id: string) {
+  function toggleOne(id: number) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -233,7 +233,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
   }
 
   async function handleBulkRenew() {
-    const ids = Array.from(selectedIds);
+    const ids = Array.from(selectedIds).map(String);
     if (ids.length === 0) return;
     setBulkRenewing(true);
     try {
@@ -260,7 +260,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
   };
   const handleUpdated = (updated: Member) =>
     setMembers((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
-  const handleDeleted = (id: string) => {
+  const handleDeleted = (id: number) => {
     setMembers((prev) => prev.filter((m) => m.id !== id));
     setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
   };
