@@ -84,7 +84,7 @@ test.describe("Member API - CRUD Operations with Mocks", () => {
     await setupApiMocks(page);
     await page.goto("/dashboard");
     const status = await page.evaluate(async () => {
-      const res = await fetch("/api/members/00000000-0000-0000-0000-000000000001", {
+      const res = await fetch("/api/members/1", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -102,7 +102,7 @@ test.describe("Member API - CRUD Operations with Mocks", () => {
     await setupApiMocks(page);
     await page.goto("/dashboard");
     const status = await page.evaluate(async () => {
-      const res = await fetch("/api/members/00000000-0000-0000-0000-000000000001", {
+      const res = await fetch("/api/members/1", {
         method: "DELETE",
       });
       return res.status;

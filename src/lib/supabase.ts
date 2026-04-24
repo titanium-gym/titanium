@@ -15,7 +15,7 @@ export function getSupabaseClient() {
 }
 
 export type Member = {
-  id: string;
+  id: number;
   full_name: string;
   phone: string | null;
   fee_amount: number;

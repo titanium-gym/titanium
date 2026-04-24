@@ -4,11 +4,9 @@ import { NextResponse } from "next/server";
 import { format, addMonths } from "date-fns";
 import { z } from "zod";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
 const bulkRenewSchema = z.object({
   ids: z
-    .array(z.string().regex(UUID_RE, "Invalid UUID"))
+    .array(z.string().regex(/^\d+$/, "Invalid id"))
     .min(1, "At least one id required")
     .max(200, "Too many ids"),
 });

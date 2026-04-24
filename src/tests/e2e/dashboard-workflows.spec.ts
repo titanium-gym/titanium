@@ -152,9 +152,9 @@ test.describe("Dashboard - Complete CRUD Workflow", () => {
     // UPDATE
     if (Array.isArray(members) && members.length > 0) {
       const member = members[0] as Record<string, unknown>;
-      const memberId = member.id as string;
+      const memberId = member.id as number;
 
-      const updateStatus = await page.evaluate(async (id: string) => {
+      const updateStatus = await page.evaluate(async (id: number) => {
         const res = await fetch(`/api/members/${id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -165,7 +165,7 @@ test.describe("Dashboard - Complete CRUD Workflow", () => {
       expect([200, 201]).toContain(updateStatus);
 
       // DELETE
-      const deleteStatus = await page.evaluate(async (id: string) => {
+      const deleteStatus = await page.evaluate(async (id: number) => {
         const res = await fetch(`/api/members/${id}`, {
           method: "DELETE",
         });

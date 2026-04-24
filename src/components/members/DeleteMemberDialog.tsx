@@ -22,7 +22,7 @@ export function DeleteMemberDialog({
   onDeleted,
 }: {
   member: Member;
-  onDeleted: (id: string) => void;
+  onDeleted: (id: number) => void;
 }) {
   const [loading, setLoading] = useState(false);
 

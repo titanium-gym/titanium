@@ -3,11 +3,10 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { memberUpdateSchema } from "@/lib/schemas/member";
 import { NextResponse } from "next/server";
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MEMBER_ID_RE = /^\d+$/;
 
 function validateId(id: string) {
-  if (!UUID_RE.test(id))
+  if (!MEMBER_ID_RE.test(id))
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   return null;
 }
