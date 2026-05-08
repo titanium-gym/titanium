@@ -12,16 +12,18 @@ const { auth } = NextAuth(authConfig);
 
 function buildCsp(nonce: string): string {
   const isProd = process.env.NODE_ENV === "production";
+  const supabaseUrl =
+    process.env.SUPABASE_URL ?? "https://*.supabase.co";
   return [
     "default-src 'self'",
     isProd
       ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    "style-src 'self' 'unsafe-inline'",
+    isProd ? `style-src 'self' 'nonce-${nonce}'` : "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://lh3.googleusercontent.com",
     isProd
-      ? "connect-src 'self' https://accounts.google.com https://*.supabase.co"
-      : "connect-src 'self' ws: wss: https://accounts.google.com https://*.supabase.co",
+      ? `connect-src 'self' https://accounts.google.com ${supabaseUrl}`
+      : `connect-src 'self' ws: wss: https://accounts.google.com ${supabaseUrl}`,
     "frame-src https://accounts.google.com",
     "frame-ancestors 'none'",
     "form-action 'self' https://accounts.google.com",

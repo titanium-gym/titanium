@@ -32,7 +32,15 @@ export const memberSchema = memberBaseSchema.refine(
   }
 );
 
-export const memberUpdateSchema = memberBaseSchema.partial();
+export const memberUpdateSchema = memberBaseSchema.partial().superRefine((data, ctx) => {
+  if (data.expires_at && data.paid_at && data.expires_at < data.paid_at) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "expires_at debe ser posterior a paid_at",
+      path: ["expires_at"],
+    });
+  }
+});
 
 export type MemberInput = z.infer<typeof memberSchema>;
 export type MemberUpdateInput = z.infer<typeof memberUpdateSchema>;

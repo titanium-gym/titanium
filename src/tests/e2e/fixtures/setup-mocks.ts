@@ -4,7 +4,7 @@
  */
 
 import { Page } from "@playwright/test";
-import { mockMembers } from "./mock-data";
+import { mockMembers, mockPayments } from "./mock-data";
 
 function today(): string {
   return new Date().toISOString().split("T")[0];
@@ -27,6 +27,15 @@ export async function setupApiMocks(page: Page) {
     const request = route.request();
     const url = request.url();
     const method = request.method();
+
+    if (url.match(/\/api\/members\/\d+\/payments$/)) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(mockPayments),
+      });
+      return;
+    }
 
     if (url.includes("/bulk-renew")) {
       await route.fulfill({

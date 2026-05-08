@@ -9,15 +9,7 @@ import { nextMonthSameDay } from "@/lib/utils/date";
 import { PAGE_SIZE } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -30,15 +22,14 @@ import { CreateMemberDialog } from "./CreateMemberDialog";
 import { EditMemberDialog } from "./EditMemberDialog";
 import { DeleteMemberDialog } from "./DeleteMemberDialog";
 import { StatsCards } from "./StatsCards";
-import { format, addMonths } from "date-fns";
+import { MembersTableToolbar } from "./MembersTableToolbar";
+import { MembersTableEmptyState } from "./MembersTableEmptyState";
+import { MembersTablePagination } from "./MembersTablePagination";
+import { format } from "date-fns";
 import {
-  ChevronLeft,
-  ChevronRight,
   ChevronUp,
   ChevronDown,
-  Users,
   RefreshCw,
-  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -104,6 +95,30 @@ function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: 
   return sortDir === "asc"
     ? <ChevronUp className="h-3 w-3 text-primary" />
     : <ChevronDown className="h-3 w-3 text-primary" />;
+}
+
+function SortableHead({
+  field, label, className, sortBy, sortDir, onSort,
+}: {
+  field: SortField; label: string; className?: string;
+  sortBy: SortField; sortDir: SortDir; onSort: (f: SortField) => void;
+}) {
+  return (
+    <TableHead
+      scope="col"
+      aria-sort={sortBy === field ? (sortDir === "asc" ? "ascending" : "descending") : "none"}
+      className={`cursor-pointer select-none hover:text-foreground transition-colors ${className ?? ""}`}
+    >
+      <button
+        onClick={() => onSort(field)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSort(field); }}
+        className="flex items-center gap-1 w-full bg-transparent border-0 p-0 text-inherit cursor-pointer"
+      >
+        {label}
+        <SortIcon field={field} sortField={sortBy} sortDir={sortDir} />
+      </button>
+    </TableHead>
+  );
 }
 
 function escapeCsvCell(value: string): string {
@@ -242,7 +257,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
     setRenewingId(member.id);
     try {
       const today = format(new Date(), "yyyy-MM-dd");
-      const newExpiry = format(addMonths(new Date(), 1), "yyyy-MM-dd");
+      const newExpiry = nextMonthSameDay(today);
       const res = await fetch(`/api/members/${member.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -250,8 +265,8 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        const msg = err?.error?.formErrors?.[0] ?? err?.error?.message ?? err?.error ?? "Error al renovar";
-        toast.error(typeof msg === "string" ? msg : "Error al renovar");
+        const msg = typeof err?.error === "string" ? err.error : "Error al renovar";
+        toast.error(msg);
         return;
       }
       const updated = await res.json();
@@ -297,21 +312,6 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
     setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
   };
 
-  function SortableHead({ field, label, className }: { field: SortField; label: string; className?: string }) {
-    return (
-      <TableHead
-        scope="col"
-        className={`cursor-pointer select-none hover:text-foreground transition-colors ${className ?? ""}`}
-        onClick={() => handleSort(field)}
-      >
-        <span className="flex items-center gap-1">
-          {label}
-          <SortIcon field={field} sortField={sortField} sortDir={sortDir} />
-        </span>
-      </TableHead>
-    );
-  }
-
   return (
     <div className="space-y-6">
       {/* Page header */}
@@ -329,107 +329,96 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
       {/* Table card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
 
-        {/* Card header — toolbar */}
-        <div className="px-4 py-3 border-b border-border flex flex-col sm:flex-row sm:items-center gap-3">
-          <div className="flex flex-1 items-center gap-2">
-            <div className="relative flex-1 sm:max-w-xs">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" aria-hidden="true" />
-              <Input
-                placeholder="Buscar por nombre…"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-9 h-8 text-sm"
-                aria-label="Buscar socio por nombre"
-              />
-            </div>
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => handleStatusChange(v as StatusFilter)}
-            >
-              <SelectTrigger className="w-36 h-8 text-sm" aria-label="Filtrar por estado">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="active">Activos</SelectItem>
-                <SelectItem value="expiring-soon">Vence pronto</SelectItem>
-                <SelectItem value="expired">Vencidos</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            {selectedIds.size > 0 && (
-              <Button
-                size="sm"
-                onClick={handleBulkRenew}
-                disabled={bulkRenewing}
-                aria-label={`Renovar ${selectedIds.size} socios seleccionados`}
-                className="h-8 text-xs gap-1.5"
-              >
-                <RefreshCw className={`w-3 h-3 ${bulkRenewing ? "animate-spin" : ""}`} />
-                Renovar ({selectedIds.size})
-              </Button>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => exportCSV(filtered)}
-              aria-label="Exportar a CSV"
-              className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">CSV</span>
-            </Button>
-          </div>
-        </div>
-
-        {/* Info strip */}
-        <div className="px-4 py-2 border-b border-border/40 bg-secondary/20 flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {filtered.length === members.length
-              ? `${members.length} socios`
-              : `${filtered.length} de ${members.length} socios`}
-            {selectedIds.size > 0 && (
-              <span className="text-primary font-medium"> · {selectedIds.size} seleccionados</span>
-            )}
-          </span>
-          {(search || statusFilter !== "all") && (
-            <button
-              className="text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-              onClick={() => { handleSearchChange(""); handleStatusChange("all"); }}
-            >
-              Limpiar filtros
-            </button>
-          )}
-        </div>
+        <MembersTableToolbar
+          search={search}
+          statusFilter={statusFilter}
+          selectedCount={selectedIds.size}
+          bulkRenewing={bulkRenewing}
+          totalCount={members.length}
+          filteredCount={filtered.length}
+          onSearchChange={handleSearchChange}
+          onStatusChange={handleStatusChange}
+          onBulkRenew={handleBulkRenew}
+          onExportCSV={() => exportCSV(filtered)}
+        />
 
         {/* Table / empty state */}
         {filtered.length === 0 ? (
-          <div
-            className="text-center py-20 text-muted-foreground"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
-                <Users className="w-5 h-5 text-muted-foreground" aria-hidden="true" />
-              </div>
-              {members.length === 0 ? (
-                <>
-                  <p className="font-semibold text-foreground">Sin socios todavía</p>
-                  <p className="text-sm">Añade el primer socio para empezar.</p>
-                </>
-              ) : (
-                <>
-                  <p className="font-semibold text-foreground">Sin resultados</p>
-                  <p className="text-sm">Prueba con otros filtros o un nombre diferente.</p>
-                </>
-              )}
-            </div>
-          </div>
+          <MembersTableEmptyState totalCount={members.length} />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile card view */}
+            <div className="md:hidden divide-y divide-border/40">
+              {paginated.map((member) => {
+                const isExpired = getExpiryStatus(member.expires_at) === "expired";
+                return (
+                  <div
+                    key={member.id}
+                    className={`flex items-start gap-3 px-4 py-3.5 transition-colors ${
+                      selectedIds.has(member.id)
+                        ? "bg-primary/8"
+                        : isExpired
+                        ? "opacity-60"
+                        : ""
+                    }`}
+                  >
+                    <Checkbox
+                      checked={selectedIds.has(member.id)}
+                      onCheckedChange={() => toggleOne(member.id)}
+                      aria-label={`Seleccionar ${member.full_name}`}
+                      className="mt-0.5 shrink-0"
+                    />
+                    <div
+                      className={`w-9 h-9 rounded-full ${getAvatarColor(member.full_name)} flex items-center justify-center text-[11px] font-bold text-white shrink-0`}
+                    >
+                      {getInitials(member.full_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {member.full_name}
+                        </p>
+                        <StatusBadge expiresAt={member.expires_at} />
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5">
+                        <p className="text-[11px] text-muted-foreground tabular-nums">
+                          Vence: {formatDate(member.expires_at)}
+                        </p>
+                        <span className="text-[11px] text-muted-foreground">·</span>
+                        <p className="text-[11px] text-muted-foreground tabular-nums">
+                          {Number(member.fee_amount).toFixed(0)} €
+                        </p>
+                      </div>
+                      {member.phone && (
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{member.phone}</p>
+                      )}
+                      {member.notes && (
+                        <p className="text-[11px] text-muted-foreground/60 truncate mt-0.5" title={member.notes}>
+                          {member.notes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRenew(member)}
+                        disabled={renewingId === member.id}
+                        aria-label={`Renovar ${member.full_name}`}
+                        className="h-8 w-8 p-0 text-muted-foreground hover:text-green-400"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${renewingId === member.id ? "animate-spin" : ""}`} />
+                      </Button>
+                      <EditMemberDialog member={member} onUpdated={handleUpdated} />
+                      <DeleteMemberDialog member={member} onDeleted={handleDeleted} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="border-border hover:bg-transparent">
@@ -440,11 +429,11 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                         aria-label="Seleccionar todos en esta página"
                       />
                     </TableHead>
-                    <SortableHead field="full_name" label="Nombre" />
+                    <SortableHead field="full_name" label="Nombre" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
                     <TableHead scope="col" className="hidden sm:table-cell text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Teléfono</TableHead>
-                    <SortableHead field="fee_amount" label="Cuota" className="hidden md:table-cell" />
-                    <SortableHead field="paid_at" label="Último pago" className="hidden md:table-cell" />
-                    <SortableHead field="expires_at" label="Vencimiento" />
+                    <SortableHead field="fee_amount" label="Cuota" className="hidden md:table-cell" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <SortableHead field="paid_at" label="Último pago" className="hidden md:table-cell" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
+                    <SortableHead field="expires_at" label="Vencimiento" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
                     <TableHead scope="col" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Estado</TableHead>
                     <TableHead scope="col" className="text-right pr-4 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Acciones</TableHead>
                   </TableRow>
@@ -527,36 +516,13 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="px-4 py-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                <span className="tabular-nums">
-                  {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} de {filtered.length}
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    aria-label="Página anterior"
-                    className="h-7 w-7 p-0"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="px-2 tabular-nums">{currentPage} / {totalPages}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    aria-label="Página siguiente"
-                    className="h-7 w-7 p-0"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
+            <MembersTablePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              filteredCount={filtered.length}
+              pageSize={PAGE_SIZE}
+              onPageChange={handlePageChange}
+            />
           </>
         )}
       </div>

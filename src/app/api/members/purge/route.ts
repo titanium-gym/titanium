@@ -3,15 +3,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
 import { format, subDays } from "date-fns";
 import { z } from "zod";
-
-const MIN_DAYS = 7;
-const MAX_DAYS = 3650;
-
-const daysSchema = z
-  .number()
-  .int("Debe ser un número entero")
-  .min(MIN_DAYS, `Mínimo ${MIN_DAYS} días`)
-  .max(MAX_DAYS, `Máximo ${MAX_DAYS} días`);
+import { daysSchema } from "@/lib/utils/purge";
 
 function thresholdDate(days: number): string {
   return format(subDays(new Date(), days), "yyyy-MM-dd");
@@ -26,14 +18,17 @@ export async function GET(req: Request) {
   const raw = Number(searchParams.get("days"));
   const parsed = daysSchema.safeParse(raw);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
 
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("members")
     .select("id, full_name, expires_at, phone")
-    .lt("expires_at", thresholdDate(parsed.data))
+    .lte("expires_at", thresholdDate(parsed.data))
     .order("expires_at", { ascending: true });
 
   if (error) return NextResponse.json({ error: "Error al consultar socios" }, { status: 500 });
@@ -55,7 +50,10 @@ export async function POST(req: Request) {
 
   const parsed = z.object({ days: daysSchema }).safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
 
   const threshold = thresholdDate(parsed.data.days);
@@ -65,17 +63,18 @@ export async function POST(req: Request) {
   const { data: targets, error: fetchErr } = await supabase
     .from("members")
     .select("id")
-    .lt("expires_at", threshold);
+    .lte("expires_at", threshold);
 
   if (fetchErr) return NextResponse.json({ error: "Error al consultar socios" }, { status: 500 });
 
   const count = (targets ?? []).length;
   if (count === 0) return NextResponse.json({ deleted: 0 });
 
+  const ids = (targets ?? []).map((t) => t.id);
   const { error: delErr } = await supabase
     .from("members")
     .delete()
-    .lt("expires_at", threshold);
+    .in("id", ids);
 
   if (delErr) return NextResponse.json({ error: "Error al eliminar socios" }, { status: 500 });
 

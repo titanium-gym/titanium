@@ -176,7 +176,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
         <div className="rounded-xl border border-border/50 bg-card/60 px-4 py-3.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-6 h-6 rounded-md bg-white/5 border border-border flex items-center justify-center shrink-0">

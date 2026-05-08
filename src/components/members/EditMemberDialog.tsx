@@ -17,6 +17,7 @@ import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Pencil } from "lucide-react";
 import { MemberFormFields } from "./MemberFormFields";
+import { MemberPaymentHistory } from "./MemberPaymentHistory";
 
 export function EditMemberDialog({
   member,
@@ -30,6 +31,7 @@ export function EditMemberDialog({
 
   const form = useForm<MemberInput>({
     resolver: zodResolver(memberSchema),
+    mode: "onBlur",
     defaultValues: {
       full_name: member.full_name,
       phone: member.phone ?? "",
@@ -62,7 +64,7 @@ export function EditMemberDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err?.error?.message ?? "Error al actualizar el socio");
+        toast.error(typeof err?.error === "string" ? err.error : "Error al actualizar el socio");
         return;
       }
       const updated = await res.json();
@@ -85,13 +87,14 @@ export function EditMemberDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar socio</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <MemberFormFields form={form} autoExpiry={false} />
+            <MemberPaymentHistory memberId={member.id} />
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 Cancelar

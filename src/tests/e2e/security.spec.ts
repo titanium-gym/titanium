@@ -64,9 +64,9 @@ test.describe("Security - Info Disclosure Prevention", () => {
   });
 
   test("login page does not leak allowed email", async ({ page }) => {
-    const allowedEmail = process.env.ALLOWED_EMAIL;
+    const allowedEmail = process.env.ALLOWED_EMAILS?.split(",")[0]?.trim();
     if (!allowedEmail) {
-      test.skip(true, "ALLOWED_EMAIL not configured in test environment");
+      test.skip(true, "ALLOWED_EMAILS not configured in test environment");
       return;
     }
     await page.goto("/login");
@@ -86,22 +86,32 @@ test.describe("Security - Info Disclosure Prevention", () => {
 test.describe("Security - API Error Handling", () => {
   test("invalid member ID returns 4xx status", async ({ page }) => {
     await setupApiMocks(page);
-    const res = await page.request.delete("/api/members/invalid-id-xyz");
+    // Navigate first to establish auth cookies; then use browser-context fetch
+    // so page.route() interceptors are active (page.request.* bypasses them).
+    await page.goto("/dashboard");
+    const res = await page.evaluate(async () => {
+      const r = await fetch("/api/members/invalid-id-xyz", { method: "DELETE" });
+      return { status: r.status };
+    });
 
     // Should not return 500
-    expect(res.status()).not.toBe(500);
-    expect([400, 404, 204]).toContain(res.status());
+    expect(res.status).not.toBe(500);
+    expect([400, 404, 204]).toContain(res.status);
   });
 
   test("invalid JSON payload returns 4xx status", async ({ page }) => {
     await setupApiMocks(page);
-    const res = await page.request.post("/api/members", {
-      data: {
-        // Missing required fields
-      },
+    await page.goto("/dashboard");
+    const res = await page.evaluate(async () => {
+      const r = await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      return { status: r.status };
     });
 
-    expect([200, 201, 400, 422]).toContain(res.status());
+    expect([200, 201, 400, 422]).toContain(res.status);
   });
 });
 

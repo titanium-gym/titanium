@@ -134,8 +134,7 @@ BYPASS_AUTH=true npm run test:e2e
 1. GitHub Secrets configured:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `ALLOWED_EMAIL`
-   - `CRON_SECRET` (optional, if you add cron back)
+   - `ALLOWED_EMAILS`
 
 2. Workflow runs (`.github/workflows/ci.yml`):
    ```yaml
@@ -366,7 +365,7 @@ Add to GitHub repo Settings → Secrets:
 ```
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-key-here
-ALLOWED_EMAIL=your-email@example.com
+ALLOWED_EMAILS=your-email@example.com
 ```
 
 ### View Results

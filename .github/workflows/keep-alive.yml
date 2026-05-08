@@ -13,16 +13,13 @@ jobs:
     name: Ping Supabase DB
     runs-on: ubuntu-latest
     steps:
-      - name: Keep-alive — 25 read requests
+      - name: Keep-alive — lightweight ping
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          BASE="${{ secrets.SUPABASE_URL }}/rest/v1/members"
-          KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
-          for i in $(seq 1 25); do
-            curl -f -s \
-              "${BASE}?select=id,full_name&limit=2&offset=$((i * 2))" \
-              -H "apikey: ${KEY}" \
-              -H "Authorization: Bearer ${KEY}" \
-              > /dev/null
-            sleep 1
-          done
-          echo "✅ 25 keep-alive requests completed"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/members?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+          echo "✅ Keep-alive ping returned HTTP ${STATUS}"

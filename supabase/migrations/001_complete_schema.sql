@@ -52,24 +52,30 @@ CREATE INDEX IF NOT EXISTS idx_members_full_name ON members(full_name);
 -- =============================================================================
 -- 5. ROW LEVEL SECURITY (RLS)
 -- Control de acceso a nivel de fila
+-- NOTE: This app uses SUPABASE_SERVICE_ROLE_KEY which bypasses RLS entirely.
+-- The RLS policies below are defined for correctness and future use,
+-- but are currently not enforced at the application layer.
 -- =============================================================================
 
 -- Habilitar RLS
 ALTER TABLE members ENABLE ROW LEVEL SECURITY;
 
 -- Política: SELECT para usuarios autenticados
+DROP POLICY IF EXISTS public_read_members ON members;
 CREATE POLICY public_read_members ON members
   FOR SELECT
   TO authenticated
   USING (TRUE);
 
 -- Política: INSERT para usuarios autenticados
+DROP POLICY IF EXISTS authenticated_insert_members ON members;
 CREATE POLICY authenticated_insert_members ON members
   FOR INSERT
   TO authenticated
   WITH CHECK (TRUE);
 
 -- Política: UPDATE para usuarios autenticados
+DROP POLICY IF EXISTS authenticated_update_members ON members;
 CREATE POLICY authenticated_update_members ON members
   FOR UPDATE
   TO authenticated
@@ -77,10 +83,37 @@ CREATE POLICY authenticated_update_members ON members
   WITH CHECK (TRUE);
 
 -- Política: DELETE para usuarios autenticados
+DROP POLICY IF EXISTS authenticated_delete_members ON members;
 CREATE POLICY authenticated_delete_members ON members
   FOR DELETE
   TO authenticated
   USING (TRUE);
+
+-- =============================================================================
+-- 6. TABLA: payments
+-- Historial de pagos por socio
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS payments (
+  id          BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+  member_id   BIGINT NOT NULL REFERENCES members(id) ON DELETE CASCADE,
+  fee_amount  INTEGER NOT NULL CHECK (fee_amount IN (30, 35)),
+  paid_at     DATE NOT NULL,
+  expires_at  DATE NOT NULL,
+  created_at  TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_payments_member_id ON payments(member_id);
+CREATE INDEX IF NOT EXISTS idx_payments_paid_at   ON payments(paid_at DESC);
+
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS payments_select ON payments;
+CREATE POLICY payments_select ON payments
+  FOR SELECT TO authenticated USING (TRUE);
+
+DROP POLICY IF EXISTS payments_insert ON payments;
+CREATE POLICY payments_insert ON payments
+  FOR INSERT TO authenticated WITH CHECK (TRUE);
 
 -- =============================================================================
 -- Confirmación
@@ -89,4 +122,4 @@ SELECT
   'Schema completo creado ✅' as status,
   COUNT(*) as tablas
 FROM information_schema.tables 
-WHERE table_schema = 'public' AND table_name = 'members';
+WHERE table_schema = 'public' AND table_name IN ('members', 'payments');

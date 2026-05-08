@@ -10,7 +10,7 @@ export async function GET() {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("members")
-    .select("*")
+    .select("id, full_name, phone, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
     .order("expires_at", { ascending: true });
 
   if (error) return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });
@@ -29,7 +29,10 @@ export async function POST(req: Request) {
   }
   const parsed = memberSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
 
   const supabase = getSupabaseClient();
@@ -40,6 +43,15 @@ export async function POST(req: Request) {
     .single();
 
   if (error) return NextResponse.json({ error: "Failed to create member" }, { status: 500 });
+
+  // Register initial payment in history (best-effort — failure does not block member creation)
+  await supabase.from("payments").insert({
+    member_id: data.id,
+    fee_amount: data.fee_amount,
+    paid_at: data.paid_at,
+    expires_at: data.expires_at,
+  });
+
   return NextResponse.json(data, { status: 201 });
 }
 

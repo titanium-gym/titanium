@@ -26,10 +26,12 @@ export type Member = {
   updated_at: string;
 };
 
-export type NotificationLog = {
-  id: string;
-  member_id: string;
-  notification_type: "warning" | "expired";
-  notified_for_date: string;
-  sent_at: string;
+export type Payment = {
+  id: number;
+  member_id: number;
+  fee_amount: number;
+  paid_at: string;
+  expires_at: string;
+  created_at: string;
 };
+

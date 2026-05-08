@@ -3,7 +3,7 @@
 ## Authentication
 
 - **Google OAuth only** — no self-registration, no username/password forms.
-- **Email allowlist** — NextAuth's `signIn` callback compares `profile.email` to `ALLOWED_EMAIL`. Any other account is rejected server-side before a session is created.
+- **Email allowlist** — NextAuth's `signIn` callback checks `profile.email` against the `ALLOWED_EMAILS` list. Any other account is rejected server-side before a session is created.
 - **Signed JWT** — sessions use JWTs signed with `NEXTAUTH_SECRET` (minimum 32 chars). Without a valid secret, all tokens are invalid.
 - **Session expiry** — 24 hours. After expiry the middleware redirects to `/login`.
 
@@ -27,10 +27,6 @@ Public routes (not protected):
 - **RLS enabled** — Row Level Security is active on all tables. There are no public policies; the `service_role` key bypasses RLS on the server.
 - **`SUPABASE_SERVICE_ROLE_KEY` is a server-only variable** — it is never bundled into the client.
 
-## Cron Endpoint
-
-`/api/cron/check-expiry` validates an `Authorization: Bearer <CRON_SECRET>` header on every invocation. Without this header it returns `401` without executing any logic.
-
 ## HTTP Security Headers
 
 Configured in `next.config.ts` (static headers applied to all routes):
@@ -43,7 +39,7 @@ Configured in `next.config.ts` (static headers applied to all routes):
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
 
-The middleware adds a per-request **CSP nonce** via `src/middleware.ts`, and applies an **in-memory IP-based rate limiter** to all non-auth, non-cron routes.
+The middleware adds a per-request **CSP nonce** via `src/middleware.ts`, and applies an **in-memory IP-based rate limiter** to all non-auth routes.
 
 ## Login Page Disclosure
 
@@ -58,12 +54,10 @@ The `/login` page is designed to minimise information leakage:
 | `NEXTAUTH_SECRET` | 🔴 Critical | Signs all JWTs. Rotate immediately if compromised |
 | `SUPABASE_SERVICE_ROLE_KEY` | 🔴 Critical | Full database access. Server-only, never expose to client |
 | `GOOGLE_CLIENT_SECRET` | 🔴 Critical | Never expose to the client |
-| `CRON_SECRET` | 🟡 High | Secures the cron endpoint |
-| `RESEND_API_KEY` | 🟡 High | Server-only |
 
 ## Generating Secrets
 
 ```bash
-# NEXTAUTH_SECRET and CRON_SECRET
+# NEXTAUTH_SECRET
 openssl rand -base64 32
 ```

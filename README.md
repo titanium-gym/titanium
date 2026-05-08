@@ -2,12 +2,11 @@
 
 # 🏋️ Titanium
 
-**Private gym management system — members, renewals, and expiry notifications.**
+**Private gym management system — members, renewals, and expiry tracking.**
 
 [![CI](https://github.com/titanium-gym/titanium/actions/workflows/tests.yml/badge.svg)](https://github.com/titanium-gym/titanium/actions/workflows/tests.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel&logoColor=white)](https://titanium-gold.vercel.app)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
 
 </div>
@@ -16,14 +15,13 @@
 
 ## Overview
 
-Titanium is a full-stack web application for managing gym members. It handles member registrations, fee renewals, expiry tracking, and sends automated notifications when memberships are about to lapse — all behind a single-account Google OAuth gate.
+Titanium is a full-stack web application for managing gym members. It handles member registrations, fee renewals, and expiry tracking — all behind a single-account Google OAuth gate.
 
 ## Features
 
 - 👤 **Member management** — create, edit, renew, and delete members
 - 📊 **Dashboard** — real-time KPIs: active, expiring soon, and expired members
 - 📈 **Income chart** — monthly fee revenue for the last 6 months
-- 🔔 **Expiry notifications** — daily cron emails for members expiring within N days
 - 🗑️ **Purge tool** — bulk-delete members expired beyond a configurable threshold
 - 🔒 **Single-user access** — Google OAuth restricted to one authorized email
 - 🛡️ **Security headers** — CSP nonce, HSTS, X-Frame-Options, rate limiting
@@ -35,10 +33,9 @@ Titanium is a full-stack web application for managing gym members. It handles me
 | Framework | Next.js 15 (App Router) |
 | Auth | NextAuth v5 · Google OAuth |
 | Database | Supabase (PostgreSQL + RLS) |
-| Email | Resend |
 | UI | shadcn/ui · Tailwind CSS v4 |
 | Deployment | Vercel |
-| Cron | Vercel Cron + GitHub Actions keep-alive |
+| Keep-alive | GitHub Actions scheduled workflow |
 | Testing | Vitest · Playwright |
 
 ---
@@ -50,7 +47,6 @@ Titanium is a full-stack web application for managing gym members. It handles me
 - Node.js 20+
 - A [Supabase](https://supabase.com) project
 - A [Google Cloud](https://console.cloud.google.com) OAuth 2.0 app
-- A [Resend](https://resend.com) account (for email notifications)
 
 ### 1. Clone & install
 
@@ -72,14 +68,10 @@ cp .env.example .env.local
 | `NEXTAUTH_URL` | `http://localhost:3000` (local) or production URL |
 | `GOOGLE_CLIENT_ID` | Google Cloud Console → OAuth 2.0 credentials |
 | `GOOGLE_CLIENT_SECRET` | Google Cloud Console → OAuth 2.0 credentials |
-| `ALLOWED_EMAIL` | The single authorized Google account |
+| `ALLOWED_EMAILS` | Comma-separated list of authorized Google accounts |
 | `SUPABASE_URL` | Supabase → Settings → API → Project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → `service_role` key |
 | `BYPASS_AUTH` | Set `true` to skip OAuth in local dev |
-| `RESEND_API_KEY` | resend.com → API Keys |
-| `OWNER_EMAIL` | Recipient of expiry notification emails |
-| `EXPIRY_WARNING_DAYS` | Days ahead to trigger expiry warnings (e.g. `3`) |
-| `CRON_SECRET` | `openssl rand -base64 32` (secures the cron endpoint) |
 
 ### 3. Set up the database
 
@@ -150,7 +142,7 @@ See [TESTING.md](TESTING.md) for the full testing guide.
 | Document | Description |
 |----------|-------------|
 | [TESTING.md](TESTING.md) | Full testing guide — unit, E2E, CI modes, mocks |
-| [docs/deployment.md](docs/deployment.md) | Vercel setup, secrets, cron, rollback |
+| [docs/deployment.md](docs/deployment.md) | Vercel setup, secrets, rollback |
 | [docs/security.md](docs/security.md) | Auth model, headers, rate limiting, CSP |
 
 ---
