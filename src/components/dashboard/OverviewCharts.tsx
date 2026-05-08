@@ -69,6 +69,34 @@ const FEE_COLORS = {
   "35 €": "var(--color-chart-5)",
 };
 
+export function computeFeeData(members: Member[]) {
+  const buckets: Record<string, { "30 €": number; "35 €": number }> = {};
+  const now = new Date();
+
+  for (const m of members) {
+    // Use parseISO so date-only strings stay in local time (avoids UTC midnight → day-before shift)
+    const month = format(parseISO(m.paid_at), "MMM yy", { locale: es });
+    if (!buckets[month]) buckets[month] = { "30 €": 0, "35 €": 0 };
+    const fee = Number(m.fee_amount);
+    // Sum euros, not count members
+    if (fee === 30) buckets[month]["30 €"] += fee;
+    else buckets[month]["35 €"] += fee;
+  }
+
+  // Last 6 months in order
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    months.push(format(d, "MMM yy", { locale: es }));
+  }
+
+  return months.map((m) => ({
+    mes: m,
+    "30 €": buckets[m]?.["30 €"] ?? 0,
+    "35 €": buckets[m]?.["35 €"] ?? 0,
+  }));
+}
+
 export function OverviewCharts({ members }: OverviewChartsProps) {
   const statusData = useMemo(() => {
     const counts = { Activos: 0, "Vence pronto": 0, Vencidos: 0 };
@@ -81,33 +109,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [members]);
 
-  const feeData = useMemo(() => {
-    const buckets: Record<string, { "30 €": number; "35 €": number }> = {};
-    const now = new Date();
-
-    for (const m of members) {
-      // Use parseISO so date-only strings stay in local time (avoids UTC midnight → day-before shift)
-      const month = format(parseISO(m.paid_at), "MMM yy", { locale: es });
-      if (!buckets[month]) buckets[month] = { "30 €": 0, "35 €": 0 };
-      const fee = Number(m.fee_amount);
-      // Sum euros, not count members
-      if (fee === 30) buckets[month]["30 €"] += fee;
-      else buckets[month]["35 €"] += fee;
-    }
-
-    // Last 6 months in order
-    const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push(format(d, "MMM yy", { locale: es }));
-    }
-
-    return months.map((m) => ({
-      mes: m,
-      "30 €": buckets[m]?.["30 €"] ?? 0,
-      "35 €": buckets[m]?.["35 €"] ?? 0,
-    }));
-  }, [members]);
+  const feeData = useMemo(() => computeFeeData(members), [members]);
 
   const hasAnyStatus = statusData.some((d) => d.value > 0);
   const activePct =
@@ -130,6 +132,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
               Sin datos
             </p>
           ) : (
+            <div role="img" aria-label="Gráfico de estado de socios">
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
@@ -174,6 +177,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
                 />
               </PieChart>
             </ResponsiveContainer>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -186,6 +190,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div role="img" aria-label="Gráfico de ingresos por cuota en los últimos 6 meses">
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={feeData} barSize={16}>
               <CartesianGrid
@@ -229,6 +234,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
               ))}
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </CardContent>
       </Card>
     </div>

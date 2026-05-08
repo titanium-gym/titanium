@@ -1,7 +1,5 @@
 import { PurgePanel } from "@/components/members/PurgePanel";
 
-export const dynamic = "force-dynamic";
-
 export default function DepuracionPage() {
   return (
     <div className="space-y-6">

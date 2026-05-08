@@ -25,7 +25,7 @@ export async function GET(
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("members")
-    .select("*")
+    .select("id, full_name, phone, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
     .eq("id", id)
     .single();
 
@@ -52,11 +52,13 @@ export async function PUT(
   }
   const parsed = memberUpdateSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    return NextResponse.json(
+      { error: "Datos inválidos", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
 
-  // Only pass fields that were actually provided — avoids touching columns
-  // that may not exist yet (e.g. notes before migration 003 is applied).
+  // Only pass fields that were actually provided — avoids no-op updates.
   const updateData = Object.fromEntries(
     Object.entries(parsed.data).filter(([, v]) => v !== undefined)
   );
@@ -74,6 +76,17 @@ export async function PUT(
     .single();
 
   if (error) return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
+
+  // If paid_at was updated (renewal), record payment in history
+  if (updateData.paid_at !== undefined) {
+    await supabase.from("payments").insert({
+      member_id: Number(id),
+      fee_amount: data.fee_amount,
+      paid_at: data.paid_at,
+      expires_at: data.expires_at,
+    });
+  }
+
   return NextResponse.json(data);
 }
 

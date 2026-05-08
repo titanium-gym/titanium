@@ -1,5 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Expose BYPASS_AUTH to the test-runner process so tests can detect it and skip
+// auth-only assertions (the same value is also passed to the web server via webServer.env)
+process.env.BYPASS_AUTH = process.env.BYPASS_AUTH ?? "true";
+
 export default defineConfig({
   testDir: "./src/tests/e2e",
   fullyParallel: true,

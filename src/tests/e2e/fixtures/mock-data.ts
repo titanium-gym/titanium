@@ -77,3 +77,32 @@ export const mockRenewalResponse = {
 export const mockErrorResponse = {
   error: "Not found",
 };
+
+export const mockPayments = [
+  {
+    id: 1,
+    member_id: 1,
+    fee_amount: 30,
+    paid_at: offsetDate(-30),
+    expires_at: offsetDate(0),
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+  },
+  {
+    id: 2,
+    member_id: 1,
+    fee_amount: 30,
+    paid_at: offsetDate(0),
+    expires_at: offsetDate(30),
+    created_at: new Date().toISOString(),
+  },
+];
+
+export const mockAllPayments = Array.from({ length: 20 }, (_, i) => ({
+  id: i + 1,
+  member_id: (i % 10) + 1,
+  fee_amount: i % 2 === 0 ? 30 : 35,
+  paid_at: offsetDate(-i * 3),
+  expires_at: offsetDate(30 - i * 3),
+  created_at: new Date(Date.now() - i * 3 * 86400000).toISOString(),
+  member_name: `Socio ${String((i % 10) + 1).padStart(3, "0")}`,
+}));

@@ -1,11 +1,15 @@
 -- =============================================================================
 -- drop-all.sql
--- Borra TODA la base de datos (tablas, triggers, funciones)
--- ⚠️ DESTRUCTIVO - Úsalo solo si sabes qué haces
+-- ⚠️  DESTRUCTIVE SCRIPT — drops ALL tables, triggers, and functions
+-- Run ONLY in local dev. NEVER run against production.
+-- Double-check your connection string before executing.
+-- NOTE: notification_log table was removed (cron/email feature deleted).
+--       If it still exists in your DB, this script will drop it too.
 -- =============================================================================
 
--- Borrar tabla dependiente primero (notification_log)
+-- Borrar tablas dependientes primero (FK a members)
 DROP TABLE IF EXISTS notification_log CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
 
 -- Deshabilitar RLS en members
 ALTER TABLE IF EXISTS members DISABLE ROW LEVEL SECURITY;

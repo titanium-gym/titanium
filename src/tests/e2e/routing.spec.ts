@@ -39,6 +39,23 @@ test.describe("Routing - Core Routes", () => {
     await page.waitForLoadState("networkidle");
   });
 
+  test("GET /dashboard/pagos loads successfully (200)", async ({ page }) => {
+    const res = await page.goto("/dashboard/pagos");
+    expect(res?.status()).toBe(200);
+    expect(page.url()).toContain("/dashboard/pagos");
+  });
+
+  test("dashboard/pagos page renders without errors", async ({ page }) => {
+    page.on("console", (msg) => {
+      if (msg.type() === "error" && !msg.text().includes("favicon")) {
+        throw new Error(`Console error: ${msg.text()}`);
+      }
+    });
+
+    await page.goto("/dashboard/pagos");
+    await page.waitForLoadState("networkidle");
+  });
+
   test("404 for non-existent routes returns error status", async ({ page }) => {
     const res = await page.goto("/non-existent-route-xyz-abc");
     // Should return 404 or redirect

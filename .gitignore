@@ -54,9 +54,6 @@ next-env.d.ts
 supabase/.temp/
 supabase/.branches/
 
-# openspec
-openspec/
-
 # copilot cli
 .copilot/
 .github/prompts/

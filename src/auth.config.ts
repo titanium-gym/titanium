@@ -1,5 +1,19 @@
 import type { NextAuthConfig } from "next-auth";
 
+/** Returns the list of allowed emails parsed from the ALLOWED_EMAILS env var (comma-separated). */
+export function getAllowedEmails(): string[] {
+  return (process.env.ALLOWED_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Returns true if the given email is in the ALLOWED_EMAILS list. Case-insensitive. */
+export function isSessionEmailAllowed(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return getAllowedEmails().includes(email.toLowerCase().trim());
+}
+
 export const authConfig: NextAuthConfig = {
   providers: [],
   callbacks: {
@@ -10,12 +24,10 @@ export const authConfig: NextAuthConfig = {
       ) {
         return true;
       }
-      return !!session;
+      return isSessionEmailAllowed(session?.user?.email);
     },
     signIn({ profile }) {
-      const allowed = process.env.ALLOWED_EMAIL;
-      if (!allowed) return false;
-      return profile?.email === allowed;
+      return isSessionEmailAllowed(profile?.email);
     },
     session({ session }) {
       return session;

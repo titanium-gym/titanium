@@ -31,8 +31,6 @@ jobs:
 
       - name: Run unit tests
         run: npm test
-        env:
-          EXPIRY_WARNING_DAYS: "3"
 
       - name: Run ESLint
         run: npx eslint src next.config.ts playwright.config.ts vitest.config.ts --max-warnings 0
@@ -62,7 +60,7 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
           GOOGLE_CLIENT_ID: "ci-placeholder"
           GOOGLE_CLIENT_SECRET: "ci-placeholder"
-          ALLOWED_EMAIL: "ci@example.com"
+          ALLOWED_EMAILS: "ci@example.com"
 
   test-e2e:
     name: E2E Tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})

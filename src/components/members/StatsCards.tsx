@@ -115,7 +115,14 @@ export function StatsCards({ members }: { members: Member[] }) {
 
           {s.progressPct !== undefined && (
             <div className="space-y-1">
-              <div className="h-1 bg-border/30 rounded-full overflow-hidden">
+              <div
+                className="h-1 bg-border/30 rounded-full overflow-hidden"
+                role="progressbar"
+                aria-valuenow={s.progressPct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={s.label}
+              >
                 <div
                   className={`h-full ${s.progressColor} rounded-full transition-all`}
                   style={{ width: `${s.progressPct}%` }}

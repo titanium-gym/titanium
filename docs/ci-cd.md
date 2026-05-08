@@ -47,7 +47,7 @@ Duration    ~8 seconds
 ```yaml
 Steps:
   1. Checkout code
-  2. Setup Node.js 20
+  2. Setup Node.js 22
   3. Install dependencies (npm ci)
   4. Type check (tsc --noEmit)
   5. Build (npm run build)
@@ -106,7 +106,7 @@ SUPABASE_URL=<secret>          # Optional, not used (mocks)
 - UI elements not rendering
 
 **Artifacts:**
-- Uploaded as `playwright-report-<run-id>` (30 day retention)
+- Uploaded as `playwright-report-<run-id>` (3 day retention)
 - Download from Actions → Latest run → Artifacts
 
 ---
@@ -174,9 +174,10 @@ All actions are pinned to specific versions for stability:
 
 | Action | Version | Purpose |
 |--------|---------|---------|
-| `actions/checkout` | v4 | Clone repository |
-| `actions/setup-node` | v4 | Install Node.js 20 |
-| `actions/upload-artifact` | v4 | Store test reports |
+| `actions/checkout` | v6 | Clone repository |
+| `actions/setup-node` | v6 | Install Node.js 22 |
+| `actions/cache` | v5 | Cache Playwright browsers |
+| `actions/upload-artifact` | v7 | Store test reports |
 
 **Checking for updates:**
 - https://github.com/actions/checkout/releases
@@ -187,7 +188,7 @@ All actions are pinned to specific versions for stability:
 
 ## Workflow File
 
-**Location:** `.github/workflows/ci.yml`
+**Location:** `.github/workflows/tests.yml`
 
 ### Key Features
 
@@ -195,13 +196,13 @@ All actions are pinned to specific versions for stability:
 ✅ **Minimal permissions** - `contents: read` only
 ✅ **Caching** - npm cache between runs
 ✅ **Descriptive names** - Each step clearly labeled
-✅ **Artifact retention** - 30 days for reports
+✅ **Artifact retention** - 3 days for reports
 ✅ **Always upload** - Playwright report even on failure (`if: always()`)
 
 ### Environment Variables
 
 - **Build job:** Full set of secrets (needed for build context)
-- **Unit tests:** Only `EXPIRY_WARNING_DAYS`
+- **Unit tests:** No env vars required (uses constants from code)
 - **E2E tests:** `BYPASS_AUTH=true` + full secret set
 
 ---
@@ -213,7 +214,7 @@ All actions are pinned to specific versions for stability:
 **Problem:** Missing GitHub secret
 
 **Solution:**
-1. Check `ci.yml` for all secrets used
+1. Check `tests.yml` for all secrets used
 2. Go to repo Settings → Secrets
 3. Add missing secret
 4. Re-run workflow
@@ -232,7 +233,7 @@ All actions are pinned to specific versions for stability:
 
 **Solution:**
 ```bash
-nvm use 20
+nvm use 22
 npm ci
 npm run build
 ```
@@ -275,7 +276,7 @@ npx eslint src next.config.ts --fix
 
 | Aspect | Local | CI |
 |--------|-------|-----|
-| Node version | Any | 20 (pinned) |
+| Node version | Any | 22 (pinned) |
 | Secrets | `.env.local` | GitHub Secrets |
 | BYPASS_AUTH | `true` (dev) | `true` (E2E only) |
 | Build | `npm run dev` | `npm run build` |

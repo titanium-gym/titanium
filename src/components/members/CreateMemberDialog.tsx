@@ -32,6 +32,7 @@ export function CreateMemberDialog({
 
   const form = useForm<MemberInput>({
     resolver: zodResolver(memberSchema),
+    mode: "onBlur",
     defaultValues: {
       full_name: "",
       phone: "",
@@ -52,7 +53,7 @@ export function CreateMemberDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err?.error?.message ?? "Error al crear el socio");
+        toast.error(typeof err?.error === "string" ? err.error : "Error al crear el socio");
         return;
       }
       const member = await res.json();
@@ -77,7 +78,7 @@ export function CreateMemberDialog({
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Añadir socio</DialogTitle>
         </DialogHeader>

@@ -68,13 +68,9 @@ Go to Vercel Dashboard → your project → Settings → Environment Variables:
 | `NEXTAUTH_URL` | `https://your-domain.vercel.app` | No trailing slash |
 | `GOOGLE_CLIENT_ID` | From Google Cloud Console | |
 | `GOOGLE_CLIENT_SECRET` | From Google Cloud Console | |
-| `ALLOWED_EMAIL` | Your Google account email | Single authorized user |
+| `ALLOWED_EMAILS` | Your authorized Google accounts (comma-separated) | e.g. `owner@gmail.com,user@gmail.com` |
 | `SUPABASE_URL` | From Supabase → Settings → API | |
 | `SUPABASE_SERVICE_ROLE_KEY` | From Supabase → Settings → API | |
-| `RESEND_API_KEY` | From resend.com → API Keys | |
-| `OWNER_EMAIL` | Notification recipient | |
-| `EXPIRY_WARNING_DAYS` | e.g. `3` | Days ahead to warn |
-| `CRON_SECRET` | `openssl rand -base64 32` | Secures the cron endpoint |
 
 ### First manual deploy
 
@@ -93,10 +89,9 @@ Add secrets under GitHub repo → Settings → Secrets and variables → Actions
 | `NEXTAUTH_SECRET` | Same as Vercel |
 | `GOOGLE_CLIENT_ID` | Same as Vercel |
 | `GOOGLE_CLIENT_SECRET` | Same as Vercel |
-| `ALLOWED_EMAIL` | Same as Vercel |
+| `ALLOWED_EMAILS` | Same as Vercel |
 | `SUPABASE_URL` | Same as Vercel |
 | `SUPABASE_SERVICE_ROLE_KEY` | Same as Vercel |
-| `CRON_SECRET` | Same as Vercel |
 
 Also add these for the keep-alive workflow:
 
@@ -132,5 +127,5 @@ vercel promote <deployment-url>
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `redirect_uri_mismatch` | URI not registered in Google Cloud | Add the exact URI in OAuth credentials |
-| `Unauthorized` on login | Email does not match `ALLOWED_EMAIL` | Verify the value in Vercel env vars |
+| `Unauthorized` on login | Email is not in `ALLOWED_EMAILS` | Verify the value in Vercel env vars |
 | `Could not find table 'members'` | Migration not run | Execute `001_complete_schema.sql` in Supabase SQL Editor |

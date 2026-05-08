@@ -1,19 +1,18 @@
 import { describe, it, expect } from "vitest";
-import { format, subDays } from "date-fns";
-import { parseISO } from "date-fns";
+import { format, subDays, parseISO } from "date-fns";
+import { daysSchema, computeThreshold } from "@/lib/utils/purge";
 
-/** Replicates the server-side threshold calculation from the purge route */
-function purgeCutoff(days: number): string {
-  return format(subDays(new Date(), days), "yyyy-MM-dd");
+function cutoffStr(days: number): string {
+  return format(computeThreshold(days), "yyyy-MM-dd");
 }
 
 function isExpiredByDays(expiresAt: string, days: number): boolean {
-  return expiresAt < purgeCutoff(days);
+  return expiresAt < cutoffStr(days);
 }
 
 describe("purge threshold logic", () => {
   it("cutoff is exactly N days before today", () => {
-    const cutoff = purgeCutoff(60);
+    const cutoff = cutoffStr(60);
     const expected = format(subDays(new Date(), 60), "yyyy-MM-dd");
     expect(cutoff).toBe(expected);
   });
@@ -39,20 +38,17 @@ describe("purge threshold logic", () => {
     expect(isExpiredByDays(expiry, 60)).toBe(false);
   });
 
-  it("minimum days guard: 7 days", () => {
-    // The API enforces min=7; a 6-day input should be rejected at schema level
+  it("daysSchema enforces min=7, max=3650", () => {
     const valid = [7, 30, 60, 365, 3650];
     const invalid = [0, 1, 6, -1, 3651, 10000];
-    valid.forEach((d) => expect(d).toBeGreaterThanOrEqual(7));
-    invalid.filter((d) => d < 7 || d > 3650).forEach((d) =>
-      expect(d < 7 || d > 3650).toBe(true)
-    );
+    valid.forEach((d) => expect(daysSchema.safeParse(d).success).toBe(true));
+    invalid.forEach((d) => expect(daysSchema.safeParse(d).success).toBe(false));
   });
 
   it("cutoff dates are ordered correctly (more days = older cutoff)", () => {
-    const cutoff30 = purgeCutoff(30);
-    const cutoff60 = purgeCutoff(60);
-    const cutoff90 = purgeCutoff(90);
+    const cutoff30 = cutoffStr(30);
+    const cutoff60 = cutoffStr(60);
+    const cutoff90 = cutoffStr(90);
     expect(parseISO(cutoff30) > parseISO(cutoff60)).toBe(true);
     expect(parseISO(cutoff60) > parseISO(cutoff90)).toBe(true);
   });
