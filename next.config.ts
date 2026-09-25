@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
         // X-XSS-Protection intentionally omitted — deprecated and ignored by modern browsers.
       ],
     },
+    {
+      // Login and dashboard render session-dependent content; never let a
+      // proxy or browser cache these pages.
+      source: "/(login|dashboard)(.*)",
+      headers: [{ key: "Cache-Control", value: "private, no-store" }],
+    },
   ],
 };
 

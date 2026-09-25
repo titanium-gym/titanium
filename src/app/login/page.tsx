@@ -10,7 +10,14 @@ export default async function LoginPage({
   const { error } = await searchParams;
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
+    <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary focus:text-primary-foreground"
+      >
+        Saltar al contenido principal
+      </a>
+    <main id="main-content" className="min-h-screen flex flex-col lg:flex-row">
       {/* ── LEFT HERO PANEL ─────────────────────────────── */}
       <div className="relative flex-1 lg:flex-[3] flex flex-col justify-between p-10 lg:p-14 overflow-hidden bg-[oklch(0.10_0_0)] min-h-[40vh] lg:min-h-screen">
         {/* Grid lines — motif 1 */}
@@ -47,7 +54,7 @@ export default async function LoginPage({
 
         {/* Main tagline */}
         <div className="relative z-10 space-y-4">
-          <p className="text-[11px] font-semibold tracking-[0.25em] uppercase text-white/30">
+          <p className="text-[11px] font-semibold tracking-[0.25em] uppercase text-white/60">
             Portal de gestión
           </p>
           <h1 className="text-4xl lg:text-5xl font-black leading-[1.1] tracking-tight text-white">
@@ -120,11 +127,12 @@ export default async function LoginPage({
             </form>
           </div>
 
-          <p className="text-[11px] text-muted-foreground/50 text-center">
+          <p className="text-[11px] text-muted-foreground/80 text-center">
             Solo cuentas autorizadas pueden acceder.
           </p>
         </div>
       </div>
-    </div>
+    </main>
+    </>
   );
 }

@@ -28,9 +28,9 @@ jobs:
           # curl's --oauth2-bearer flag builds the required OAuth-style auth
           # header for us, from the same anon key used for "apikey".
           declare -a ENDPOINTS=(
-            "members?select=id&limit=1"
-            "members?select=id&order=id.desc&limit=1"
-            "payments?select=id&limit=1"
+            "members?select=id&limit=100"
+            "members?select=id&order=id.desc&limit=100"
+            "payments?select=id&limit=100"
           )
 
           FAILED=0
