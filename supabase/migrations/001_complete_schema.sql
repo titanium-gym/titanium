@@ -23,7 +23,6 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS members (
   id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
   full_name VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
   fee_amount INTEGER NOT NULL CHECK (fee_amount IN (30, 35)),
   paid_at DATE NOT NULL,
   expires_at DATE NOT NULL,

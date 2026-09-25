@@ -34,7 +34,6 @@ export function EditMemberDialog({
     mode: "onBlur",
     defaultValues: {
       full_name: member.full_name,
-      phone: member.phone ?? "",
       fee_amount: Number(member.fee_amount) as 30 | 35,
       paid_at: member.paid_at,
       expires_at: member.expires_at,
@@ -46,7 +45,6 @@ export function EditMemberDialog({
   useEffect(() => {
     form.reset({
       full_name: member.full_name,
-      phone: member.phone ?? "",
       fee_amount: Number(member.fee_amount) as 30 | 35,
       paid_at: member.paid_at,
       expires_at: member.expires_at,

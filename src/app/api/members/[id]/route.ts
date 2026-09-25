@@ -25,7 +25,7 @@ export async function GET(
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("members")
-    .select("id, full_name, phone, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
+    .select("id, full_name, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
     .eq("id", id)
     .single();
 

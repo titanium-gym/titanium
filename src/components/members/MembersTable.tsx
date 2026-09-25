@@ -127,10 +127,9 @@ function escapeCsvCell(value: string): string {
 }
 
 function exportCSV(members: Member[]) {
-  const header = ["Nombre", "Teléfono", "Cuota (€)", "Fecha pago", "Vencimiento", "Estado", "Notas"];
+  const header = ["Nombre", "Cuota (€)", "Fecha pago", "Vencimiento", "Estado", "Notas"];
   const rows = members.map((m) => [
     m.full_name,
-    m.phone ?? "",
     Number(m.fee_amount).toFixed(2),
     m.paid_at,
     m.expires_at,
@@ -389,9 +388,6 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                           {Number(member.fee_amount).toFixed(0)} €
                         </p>
                       </div>
-                      {member.phone && (
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{member.phone}</p>
-                      )}
                       {member.notes && (
                         <p className="text-[11px] text-muted-foreground/60 truncate mt-0.5" title={member.notes}>
                           {member.notes}
@@ -430,7 +426,6 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                       />
                     </TableHead>
                     <SortableHead field="full_name" label="Nombre" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
-                    <TableHead scope="col" className="hidden sm:table-cell text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Teléfono</TableHead>
                     <SortableHead field="fee_amount" label="Cuota" className="hidden md:table-cell" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
                     <SortableHead field="paid_at" label="Último pago" className="hidden md:table-cell" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
                     <SortableHead field="expires_at" label="Vencimiento" sortBy={sortField} sortDir={sortDir} onSort={handleSort} />
@@ -475,9 +470,6 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                               )}
                             </div>
                           </div>
-                        </TableCell>
-                        <TableCell className="hidden sm:table-cell text-muted-foreground text-sm">
-                          {member.phone || <span className="opacity-30">—</span>}
                         </TableCell>
                         <TableCell className="hidden md:table-cell text-muted-foreground text-sm tabular-nums">
                           {Number(member.fee_amount).toFixed(0)} €

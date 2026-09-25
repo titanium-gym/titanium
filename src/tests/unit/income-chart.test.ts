@@ -14,7 +14,6 @@ import { computeFeeData } from "@/components/dashboard/OverviewCharts";
 const baseMember: Member = {
   id: 1,
   full_name: "Test Member",
-  phone: null,
   fee_amount: 30,
   paid_at: "2025-01-01",
   expires_at: "2025-02-01",

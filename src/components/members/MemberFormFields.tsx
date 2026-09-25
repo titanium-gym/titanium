@@ -56,19 +56,6 @@ export function MemberFormFields({ form, autoExpiry = true }: MemberFormFieldsPr
       />
       <FormField
         control={form.control}
-        name="phone"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Teléfono</FormLabel>
-            <FormControl>
-              <Input placeholder="600 000 000" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-      <FormField
-        control={form.control}
         name="fee_amount"
         render={({ field }) => (
           <FormItem>

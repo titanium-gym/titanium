@@ -32,7 +32,6 @@ type PreviewMember = {
   id: number;
   full_name: string;
   expires_at: string;
-  phone: string | null;
 };
 
 const MIN_DAYS = 7;
@@ -245,7 +244,6 @@ export function PurgePanel() {
                   <TableHeader>
                     <TableRow className="border-destructive/20 hover:bg-transparent">
                       <TableHead className="text-[11px] uppercase tracking-wider">Nombre</TableHead>
-                      <TableHead className="text-[11px] uppercase tracking-wider hidden sm:table-cell">Teléfono</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider">Venció</TableHead>
                       <TableHead className="text-[11px] uppercase tracking-wider text-right">Días</TableHead>
                     </TableRow>
@@ -254,9 +252,6 @@ export function PurgePanel() {
                     {preview.map((m) => (
                       <TableRow key={m.id} className="border-destructive/15">
                         <TableCell className="font-medium text-sm">{m.full_name}</TableCell>
-                        <TableCell className="text-muted-foreground text-sm hidden sm:table-cell">
-                          {m.phone ?? "—"}
-                        </TableCell>
                         <TableCell className="text-muted-foreground text-sm tabular-nums">
                           {formatDate(m.expires_at)}
                         </TableCell>
