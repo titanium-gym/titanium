@@ -31,7 +31,6 @@ export const mockMembers = Array.from({ length: 50 }, (_, i) => {
   return {
     id: i + 1,
     full_name: `Socio ${String(i + 1).padStart(3, "0")}`,
-    phone: i % 2 === 0 ? `+34 6${String(i * 13 + 10000000).padStart(8, "0")}` : null,
     fee_amount: i % 2 === 0 ? 30 : 35,
     paid_at,
     expires_at,
@@ -44,7 +43,6 @@ export const mockMembers = Array.from({ length: 50 }, (_, i) => {
 export const mockMember = {
   id: 999,
   full_name: "Nuevo Socio",
-  phone: "+34 612345678",
   fee_amount: 30,
   paid_at: offsetDate(-15),
   expires_at: offsetDate(15),
@@ -56,7 +54,6 @@ export const mockMember = {
 export const mockUpdateMember = {
   id: 999,
   full_name: "Nuevo Socio Actualizado",
-  phone: "+34 623456789",
   fee_amount: 35,
   paid_at: offsetDate(-10),
   expires_at: offsetDate(20),

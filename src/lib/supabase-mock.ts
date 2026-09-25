@@ -29,7 +29,6 @@ const mockData: Member[] = Array.from({ length: 50 }, (_, i) => {
   return {
     id: i + 1,
     full_name: `Socio ${String(i + 1).padStart(3, "0")}`,
-    phone: i % 2 === 0 ? `+34 6${String(i * 13 + 10000000).padStart(8, "0")}` : null,
     fee_amount: i % 2 === 0 ? 30 : 35,
     paid_at,
     expires_at,

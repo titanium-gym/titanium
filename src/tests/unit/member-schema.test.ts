@@ -4,7 +4,6 @@ import { memberSchema } from "@/lib/schemas/member";
 describe("memberSchema", () => {
   const valid = {
     full_name: "Juan García",
-    phone: "600000000",
     fee_amount: 30,
     paid_at: "2024-01-01",
     expires_at: "2024-02-01",
@@ -60,16 +59,5 @@ describe("memberSchema", () => {
     expect(result.success).toBe(false);
     const errorStr = JSON.stringify(result.error?.flatten());
     expect(errorStr).toContain("expires_at");
-  });
-
-  it("allows phone to be empty", () => {
-    const result = memberSchema.safeParse({ ...valid, phone: "" });
-    expect(result.success).toBe(true);
-  });
-
-  it("allows phone to be undefined", () => {
-    const { phone: _phone, ...withoutPhone } = valid;
-    const result = memberSchema.safeParse(withoutPhone);
-    expect(result.success).toBe(true);
   });
 });

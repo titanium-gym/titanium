@@ -256,7 +256,7 @@ export default async function DashboardPage() {
                         {m.full_name}
                       </p>
                       <p className="text-[11px] text-muted-foreground">
-                        {m.phone ?? "Sin teléfono"}
+                        Cuota: {Number(m.fee_amount).toFixed(0)} €
                       </p>
                     </div>
                     <Badge

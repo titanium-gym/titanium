@@ -2,7 +2,7 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    - cron: "0 10 * * *" # Daily at 10:00 UTC
+    - cron: "0 */3 * * *"
   workflow_dispatch: # Allow manual trigger
 
 permissions:
@@ -13,13 +13,42 @@ jobs:
     name: Ping Supabase DB
     runs-on: ubuntu-latest
     steps:
-      - name: Keep-alive — lightweight ping
+      - name: Keep-alive — multiple read-only requests
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "${SUPABASE_URL}/rest/v1/members?select=id&limit=1" \
-            -H "apikey: ${SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
-          echo "✅ Keep-alive ping returned HTTP ${STATUS}"
+          set -euo pipefail
+
+          # Anon key only: RLS restricts members/payments to the "authenticated"
+          # role, so these calls never return real member data (safe for a
+          # public repo's Actions logs) — they only exercise the DB connection.
+          # Several distinct requests per run, instead of a single ping, to
+          # generate a clearer activity signal for Supabase.
+          # curl's --oauth2-bearer flag builds the required OAuth-style auth
+          # header for us, from the same anon key used for "apikey".
+          declare -a ENDPOINTS=(
+            "members?select=id&limit=1"
+            "members?select=id&order=id.desc&limit=1"
+            "payments?select=id&limit=1"
+          )
+
+          FAILED=0
+          for endpoint in "${ENDPOINTS[@]}"; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              --oauth2-bearer "${SUPABASE_ANON_KEY}" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              "${SUPABASE_URL}/rest/v1/${endpoint}")
+
+            if [[ "$STATUS" =~ ^2 ]]; then
+              echo "✅ ${endpoint} -> HTTP ${STATUS}"
+            else
+              echo "❌ ${endpoint} -> HTTP ${STATUS}"
+              FAILED=1
+            fi
+          done
+
+          if [[ "$FAILED" -eq 1 ]]; then
+            echo "One or more keep-alive requests failed."
+            exit 1
+          fi

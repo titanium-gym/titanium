@@ -35,7 +35,6 @@ export function CreateMemberDialog({
     mode: "onBlur",
     defaultValues: {
       full_name: "",
-      phone: "",
       fee_amount: undefined,
       paid_at: today,
       expires_at: nextMonthSameDay(today),
@@ -59,7 +58,7 @@ export function CreateMemberDialog({
       const member = await res.json();
       onCreated(member);
       toast.success("Socio creado correctamente");
-      form.reset({ full_name: "", phone: "", fee_amount: undefined, paid_at: today, expires_at: nextMonthSameDay(today), notes: "" });
+      form.reset({ full_name: "", fee_amount: undefined, paid_at: today, expires_at: nextMonthSameDay(today), notes: "" });
       setOpen(false);
     } catch {
       toast.error("Error de conexión");

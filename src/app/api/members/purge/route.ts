@@ -27,7 +27,7 @@ export async function GET(req: Request) {
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("members")
-    .select("id, full_name, expires_at, phone")
+    .select("id, full_name, expires_at")
     .lte("expires_at", thresholdDate(parsed.data))
     .order("expires_at", { ascending: true });
 

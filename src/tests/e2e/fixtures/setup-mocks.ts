@@ -96,7 +96,6 @@ export async function setupApiMocks(page: Page) {
       const newMember = {
         id: 999,
         full_name: "Nuevo Socio",
-        phone: "+34 612345678",
         fee_amount: 30,
         paid_at: today(),
         expires_at: nextMonth(),
