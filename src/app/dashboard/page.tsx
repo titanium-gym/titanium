@@ -1,6 +1,6 @@
 import { getSupabaseClient } from "@/lib/supabase";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
-import { OverviewCharts } from "@/components/dashboard/OverviewCharts";
+import { OverviewCharts } from "@/components/dashboard/LazyOverviewCharts";
 import { parseISO, startOfMonth } from "date-fns";
 import { AlertTriangle, Clock, TrendingUp, XCircle, Euro, Users, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
   const supabase = getSupabaseClient();
   const { data: members, error } = await supabase
     .from("members")
-    .select("*")
+    .select("id, full_name, fee_amount, paid_at, expires_at, created_at")
     .order("expires_at", { ascending: true });
 
   if (error) {

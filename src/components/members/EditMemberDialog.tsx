@@ -22,9 +22,12 @@ import { MemberPaymentHistory } from "./MemberPaymentHistory";
 export function EditMemberDialog({
   member,
   onUpdated,
+  size = "sm",
 }: {
   member: Member;
   onUpdated: (member: Member) => void;
+  /** "sm" (28px, desktop row) or "lg" (36px, mobile card — bigger tap target). */
+  size?: "sm" | "lg";
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,8 +83,17 @@ export function EditMemberDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-      <Button variant="ghost" size="sm" aria-label={`Editar ${member.full_name}`} className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground">
-            <Pencil className="w-3.5 h-3.5" />
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Editar ${member.full_name}`}
+            className={
+              size === "lg"
+                ? "h-9 w-9 p-0 text-muted-foreground hover:text-foreground"
+                : "h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+            }
+          >
+            <Pencil className={size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5"} />
           </Button>
         }
       />

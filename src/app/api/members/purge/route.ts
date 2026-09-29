@@ -59,24 +59,16 @@ export async function POST(req: Request) {
   const threshold = thresholdDate(parsed.data.days);
   const supabase = getSupabaseClient();
 
-  // Fetch IDs first so we can return the exact count deleted
-  const { data: targets, error: fetchErr } = await supabase
-    .from("members")
-    .select("id")
-    .lte("expires_at", threshold);
-
-  if (fetchErr) return NextResponse.json({ error: "Error al consultar socios" }, { status: 500 });
-
-  const count = (targets ?? []).length;
-  if (count === 0) return NextResponse.json({ deleted: 0 });
-
-  const ids = (targets ?? []).map((t) => t.id);
-  const { error: delErr } = await supabase
+  // Single atomic DELETE ... WHERE ... RETURNING — avoids the race where a
+  // member gets renewed between a separate "select ids" step and the delete
+  // that would otherwise remove them anyway.
+  const { data: deleted, error: delErr } = await supabase
     .from("members")
     .delete()
-    .in("id", ids);
+    .lte("expires_at", threshold)
+    .select("id");
 
   if (delErr) return NextResponse.json({ error: "Error al eliminar socios" }, { status: 500 });
 
-  return NextResponse.json({ deleted: count });
+  return NextResponse.json({ deleted: (deleted ?? []).length });
 }
