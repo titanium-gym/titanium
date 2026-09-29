@@ -20,9 +20,12 @@ import { Trash2 } from "lucide-react";
 export function DeleteMemberDialog({
   member,
   onDeleted,
+  size = "sm",
 }: {
   member: Member;
   onDeleted: (id: number) => void;
+  /** "sm" (28px, desktop row) or "lg" (36px, mobile card — bigger tap target). */
+  size?: "sm" | "lg";
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -49,8 +52,17 @@ export function DeleteMemberDialog({
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="ghost" size="sm" aria-label={`Eliminar ${member.full_name}`} className="h-7 w-7 p-0 text-muted-foreground hover:text-primary">
-            <Trash2 className="w-3.5 h-3.5" />
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label={`Eliminar ${member.full_name}`}
+            className={
+              size === "lg"
+                ? "h-9 w-9 p-0 text-muted-foreground hover:text-primary"
+                : "h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+            }
+          >
+            <Trash2 className={size === "lg" ? "w-4 h-4" : "w-3.5 h-3.5"} />
           </Button>
         }
       />

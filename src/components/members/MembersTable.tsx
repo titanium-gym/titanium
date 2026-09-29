@@ -393,20 +393,23 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                           {member.notes}
                         </p>
                       )}
-                    </div>
-                    <div className="flex flex-col gap-0.5 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRenew(member)}
-                        disabled={renewingId === member.id}
-                        aria-label={`Renovar ${member.full_name}`}
-                        className="h-8 w-8 p-0 text-muted-foreground hover:text-green-400"
-                      >
-                        <RefreshCw className={`w-3.5 h-3.5 ${renewingId === member.id ? "animate-spin" : ""}`} />
-                      </Button>
-                      <EditMemberDialog member={member} onUpdated={handleUpdated} />
-                      <DeleteMemberDialog member={member} onDeleted={handleDeleted} />
+                      {/* Actions: horizontal row, ≥44px tap targets — was a
+                          cramped 3-icon vertical stack that was hard to tap
+                          precisely on a phone. */}
+                      <div className="flex items-center gap-2 mt-2 -ml-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRenew(member)}
+                          disabled={renewingId === member.id}
+                          aria-label={`Renovar ${member.full_name}`}
+                          className="h-9 w-9 p-0 text-muted-foreground hover:text-green-400"
+                        >
+                          <RefreshCw className={`w-4 h-4 ${renewingId === member.id ? "animate-spin" : ""}`} />
+                        </Button>
+                        <EditMemberDialog member={member} onUpdated={handleUpdated} size="lg" />
+                        <DeleteMemberDialog member={member} onDeleted={handleDeleted} size="lg" />
+                      </div>
                     </div>
                   </div>
                 );
