@@ -19,10 +19,13 @@ import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExpiryStatus } from "@/lib/utils/expiry";
-import type { Member } from "@/lib/supabase";
+
+// Only the fields this component actually reads — lets the caller (the
+// dashboard page) select a narrower column set from Supabase instead of `*`.
+type ChartMember = { paid_at: string; fee_amount: number; expires_at: string };
 
 interface OverviewChartsProps {
-  members: Member[];
+  members: ChartMember[];
 }
 
 interface DonutCenterLabelProps {
@@ -69,7 +72,7 @@ const FEE_COLORS = {
   "35 €": "var(--color-chart-5)",
 };
 
-export function computeFeeData(members: Member[]) {
+export function computeFeeData(members: ChartMember[]) {
   const buckets: Record<string, { "30 €": number; "35 €": number }> = {};
   const now = new Date();
 

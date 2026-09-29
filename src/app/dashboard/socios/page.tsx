@@ -9,7 +9,7 @@ export default async function SociosPage() {
   const supabase = getSupabaseClient();
   const { data: members, error } = await supabase
     .from("members")
-    .select("*")
+    .select("id, full_name, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
     .order("expires_at", { ascending: true });
 
   if (error) {

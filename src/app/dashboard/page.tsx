@@ -1,12 +1,20 @@
+import nextDynamic from "next/dynamic";
 import { getSupabaseClient } from "@/lib/supabase";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
-import { OverviewCharts } from "@/components/dashboard/OverviewCharts";
+import { Skeleton } from "@/components/ui/skeleton";
 import { parseISO, startOfMonth } from "date-fns";
 import { AlertTriangle, Clock, TrendingUp, XCircle, Euro, Users, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
+
+// recharts is ~90KB+ gzipped — load it only on the client, only when this
+// page is actually rendered, instead of shipping it in the shared bundle.
+const OverviewCharts = nextDynamic(
+  () => import("@/components/dashboard/OverviewCharts").then((m) => m.OverviewCharts),
+  { ssr: false, loading: () => <Skeleton className="h-72 w-full rounded-xl" /> }
+);
 
 function getInitialsDashboard(name: string) {
   return name
@@ -38,7 +46,7 @@ export default async function DashboardPage() {
   const supabase = getSupabaseClient();
   const { data: members, error } = await supabase
     .from("members")
-    .select("*")
+    .select("id, full_name, fee_amount, paid_at, expires_at, created_at")
     .order("expires_at", { ascending: true });
 
   if (error) {
