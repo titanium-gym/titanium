@@ -13,6 +13,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 interface AppSidebarProps {
@@ -31,6 +32,13 @@ const NAV_ITEMS = [
 
 export function AppSidebar({ user }: AppSidebarProps) {
   const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  // On mobile the sidebar is an overlay (Sheet) — close it after navigating
+  // instead of leaving it open until the user taps outside.
+  function handleNavigate() {
+    if (isMobile) setOpenMobile(false);
+  }
 
   const initials = (user.name ?? user.email ?? "?")
     .split(/\s+/)
@@ -75,6 +83,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       render={<Link href={href} />}
                       isActive={isActive}
                       tooltip={label}
+                      onClick={handleNavigate}
                       className={
                         isActive
                           ? "relative bg-gradient-to-r from-primary/20 to-primary/5 text-primary font-semibold ring-1 ring-inset ring-primary/30 shadow-[0_2px_12px_-2px_oklch(0.62_0.22_27_/_0.35)] transition-all duration-200"
