@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { AutoRefresh } from "@/components/AutoRefresh";
 import { LogOut } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -21,6 +22,7 @@ export default async function DashboardLayout({
 
   return (
     <div>
+      <AutoRefresh />
       <SidebarProvider>
         <AppSidebar user={user} />
 

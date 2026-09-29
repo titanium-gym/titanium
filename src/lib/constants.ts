@@ -4,3 +4,6 @@ export const FEE_TIERS = [30, 35] as const;
 export type FeeTier = (typeof FEE_TIERS)[number];
 
 export const EXPIRY_WARNING_DAYS = 3;
+
+/** How often dashboard pages silently re-fetch server data (see AutoRefresh). */
+export const AUTO_REFRESH_INTERVAL_MS = 60_000;
