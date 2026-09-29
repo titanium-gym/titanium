@@ -80,10 +80,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
                 return (
                   <SidebarMenuItem key={href}>
                     <SidebarMenuButton
-                      render={<Link href={href} />}
+                      render={<Link href={href} onClick={handleNavigate} />}
                       isActive={isActive}
                       tooltip={label}
-                      onClick={handleNavigate}
                       className={
                         isActive
                           ? "relative bg-gradient-to-r from-primary/20 to-primary/5 text-primary font-semibold ring-1 ring-inset ring-primary/30 shadow-[0_2px_12px_-2px_oklch(0.62_0.22_27_/_0.35)] transition-all duration-200"
