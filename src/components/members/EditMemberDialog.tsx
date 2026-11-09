@@ -44,16 +44,19 @@ export function EditMemberDialog({
     },
   });
 
-  // Reset form when member changes (e.g. after renew)
+  // Reset form when member values change (e.g. after renew). Depends on the
+  // values, not the object: AutoRefresh delivers new objects every minute and
+  // must not wipe what the user is typing.
+  const { full_name, fee_amount, paid_at, expires_at, notes } = member;
   useEffect(() => {
     form.reset({
-      full_name: member.full_name,
-      fee_amount: Number(member.fee_amount) as 30 | 35,
-      paid_at: member.paid_at,
-      expires_at: member.expires_at,
-      notes: member.notes ?? "",
+      full_name,
+      fee_amount: Number(fee_amount) as 30 | 35,
+      paid_at,
+      expires_at,
+      notes: notes ?? "",
     });
-  }, [member, form]);
+  }, [full_name, fee_amount, paid_at, expires_at, notes, form]);
 
   async function onSubmit(values: MemberInput) {
     setLoading(true);
