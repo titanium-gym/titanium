@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format, parseISO, differenceInDays, startOfDay } from "date-fns";
 import { toast } from "sonner";
 import { Search, Trash2, UserX, TriangleAlert } from "lucide-react";
+import { todayISO } from "@/lib/utils/date";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,7 +43,7 @@ function formatDate(iso: string): string {
 }
 
 function daysSince(iso: string): number {
-  const today = startOfDay(new Date());
+  const today = startOfDay(parseISO(todayISO()));
   const expiry = startOfDay(parseISO(iso));
   return differenceInDays(today, expiry);
 }

@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
-import { format, addDays, subDays } from "date-fns";
+import { format, addDays, subDays, parseISO } from "date-fns";
+import { todayISO } from "@/lib/utils/date";
 
-const TODAY = new Date();
+const TODAY = parseISO(todayISO());
 const fmt = (d: Date) => format(d, "yyyy-MM-dd");
 
 describe("getExpiryStatus", () => {

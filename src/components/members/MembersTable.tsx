@@ -2,10 +2,10 @@
 
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, usePathname } from "next/navigation";
-import { Member } from "@/lib/supabase";
+import type { Member } from "@/lib/supabase";
 import { getExpiryStatus } from "@/lib/utils/expiry";
-import { formatDate } from "@/lib/utils/date";
-import { nextMonthSameDay } from "@/lib/utils/date";
+import { formatDate, renewalExpiry, todayISO } from "@/lib/utils/date";
+import { escapeCsvCell } from "@/lib/utils/csv";
 import { PAGE_SIZE } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,6 @@ import { StatsCards } from "./StatsCards";
 import { MembersTableToolbar } from "./MembersTableToolbar";
 import { MembersTableEmptyState } from "./MembersTableEmptyState";
 import { MembersTablePagination } from "./MembersTablePagination";
-import { format } from "date-fns";
 import {
   ChevronUp,
   ChevronDown,
@@ -121,11 +120,6 @@ function SortableHead({
   );
 }
 
-function escapeCsvCell(value: string): string {
-  const escaped = value.replace(/"/g, '""');
-  return `"${escaped}"`;
-}
-
 function exportCSV(members: Member[]) {
   const header = ["Nombre", "Cuota (€)", "Fecha pago", "Vencimiento", "Estado", "Notas"];
   const rows = members.map((m) => [
@@ -147,12 +141,18 @@ function exportCSV(members: Member[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `socios-${format(new Date(), "yyyy-MM-dd")}.csv`;
+  a.download = `socios-${todayISO()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
 
-export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
+export function MembersTable({
+  initialMembers,
+  monthlyRevenue,
+}: {
+  initialMembers: Member[];
+  monthlyRevenue: number;
+}) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -263,8 +263,8 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
   async function handleRenew(member: Member) {
     setRenewingId(member.id);
     try {
-      const today = format(new Date(), "yyyy-MM-dd");
-      const newExpiry = nextMonthSameDay(today);
+      const today = todayISO();
+      const newExpiry = renewalExpiry(member.expires_at, today);
       const res = await fetch(`/api/members/${member.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -335,7 +335,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
       </div>
 
       {/* Stats */}
-      <StatsCards members={members} />
+      <StatsCards members={members} revenue={monthlyRevenue} />
 
       {/* Table card */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -506,7 +506,7 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
                               onClick={() => handleRenew(member)}
                               disabled={renewingId === member.id}
                               aria-label={`Renovar ${member.full_name}`}
-                              title={`Renovar → vence ${nextMonthSameDay(format(new Date(), "yyyy-MM-dd"))}`}
+                              title={`Renovar → vence ${renewalExpiry(member.expires_at)}`}
                               className="h-7 w-7 p-0 text-muted-foreground hover:text-green-400"
                             >
                               <RefreshCw className={`w-3.5 h-3.5 ${renewingId === member.id ? "animate-spin" : ""}`} />

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { requirePageAuth } from "@/lib/require-auth";
+import { getCurrentMonthIncome } from "@/lib/income";
 import { MembersTable } from "@/components/members/MembersTable";
 import { AlertTriangle } from "lucide-react";
 
@@ -9,12 +10,18 @@ export const dynamic = "force-dynamic";
 export default async function SociosPage() {
   await requirePageAuth();
   const supabase = getSupabaseClient();
-  const { data: members, error } = await supabase
-    .from("members")
-    .select("id, full_name, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
-    .order("expires_at", { ascending: true });
+  const [{ data: members, error: membersError }, { income, error: incomeError }] =
+    await Promise.all([
+      supabase
+        .from("members")
+        .select("id, full_name, fee_amount, paid_at, expires_at, notes, created_at, updated_at")
+        .order("expires_at", { ascending: true }),
+      getCurrentMonthIncome(),
+    ]);
 
+  const error = membersError ?? incomeError;
   if (error) {
+    console.error("Members page data error", error);
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -24,7 +31,7 @@ export default async function SociosPage() {
           <p className="font-semibold text-foreground">
             No se pudieron cargar los socios
           </p>
-          <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
+          <p className="text-sm text-muted-foreground mt-1">Inténtalo de nuevo en unos minutos.</p>
         </div>
         <a
           href="/dashboard/socios"
@@ -44,7 +51,7 @@ export default async function SociosPage() {
         </div>
       }
     >
-      <MembersTable initialMembers={members ?? []} />
+      <MembersTable initialMembers={members ?? []} monthlyRevenue={income} />
     </Suspense>
   );
 }

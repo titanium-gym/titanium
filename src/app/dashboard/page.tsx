@@ -2,7 +2,9 @@ import { getSupabaseClient } from "@/lib/supabase";
 import { requirePageAuth } from "@/lib/require-auth";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
 import { OverviewCharts } from "@/components/dashboard/LazyOverviewCharts";
-import { parseISO, startOfMonth } from "date-fns";
+import { getCurrentMonthIncome } from "@/lib/income";
+import { todayISO } from "@/lib/utils/date";
+import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { AlertTriangle, Clock, TrendingUp, XCircle, Euro, Users, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -38,12 +40,29 @@ function avatarColorDash(name: string) {
 export default async function DashboardPage() {
   await requirePageAuth();
   const supabase = getSupabaseClient();
-  const { data: members, error } = await supabase
-    .from("members")
-    .select("id, full_name, fee_amount, paid_at, expires_at, created_at")
-    .order("expires_at", { ascending: true });
+  const thisMonthStart = startOfMonth(parseISO(todayISO()));
+  const chartStart = format(subMonths(thisMonthStart, 5), "yyyy-MM-dd");
 
+  const [
+    { data: members, error: membersError },
+    { data: payments, error: paymentsError },
+    { income: ingresosMes, error: incomeError },
+  ] = await Promise.all([
+    supabase
+      .from("members")
+      .select("id, full_name, fee_amount, paid_at, expires_at, created_at")
+      .order("expires_at", { ascending: true }),
+    supabase
+      .from("payments")
+      .select("paid_at, fee_amount")
+      .gte("paid_at", chartStart)
+      .order("paid_at", { ascending: false }),
+    getCurrentMonthIncome(),
+  ]);
+
+  const error = membersError ?? paymentsError ?? incomeError;
   if (error) {
+    console.error("Dashboard data error", error);
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -51,23 +70,18 @@ export default async function DashboardPage() {
         </div>
         <div>
           <p className="font-semibold text-foreground">Error al cargar datos</p>
-          <p className="text-sm text-muted-foreground mt-1">{error.message}</p>
+          <p className="text-sm text-muted-foreground mt-1">Inténtalo de nuevo en unos minutos.</p>
         </div>
       </div>
     );
   }
 
   const all = members ?? [];
-  const now = new Date();
-  const thisMonthStart = startOfMonth(now);
 
   const total = all.length;
   const activos = all.filter((m) => getExpiryStatus(m.expires_at) === "active").length;
   const vencidos = all.filter((m) => getExpiryStatus(m.expires_at) === "expired").length;
   const vencenProto = all.filter((m) => getExpiryStatus(m.expires_at) === "expiring-soon").length;
-  const ingresosMes = all
-    .filter((m) => parseISO(m.paid_at) >= thisMonthStart)
-    .reduce((sum, m) => sum + Number(m.fee_amount), 0);
   const nuevosEsteMes = all.filter(
     (m) => parseISO(m.created_at) >= thisMonthStart
   ).length;
@@ -217,7 +231,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Charts */}
-      <OverviewCharts members={all} />
+      <OverviewCharts members={all} payments={payments ?? []} />
 
       {/* Upcoming expirations */}
       <Card className="bg-card/50 border-border/60">

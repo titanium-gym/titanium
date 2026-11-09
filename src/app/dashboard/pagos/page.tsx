@@ -1,7 +1,8 @@
 import { getSupabaseClient } from "@/lib/supabase";
 import { requirePageAuth } from "@/lib/require-auth";
-import { formatDate } from "@/lib/utils/date";
-import { parseISO, format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { getCurrentMonthIncome } from "@/lib/income";
+import { currentMonthRange, formatDate } from "@/lib/utils/date";
+import { format } from "date-fns";
 import { Euro, Receipt } from "lucide-react";
 import {
   Card,
@@ -17,35 +18,32 @@ export default async function PagosPage() {
   await requirePageAuth();
   const supabase = getSupabaseClient();
 
-  const { data: payments, error } = await supabase
-    .from("payments")
-    .select("id, member_id, fee_amount, paid_at, expires_at, created_at, members(full_name)")
-    .order("paid_at", { ascending: false })
-    .limit(200);
+  const [
+    { data: payments, error: paymentsError },
+    { income: ingresosMes, count: renovacionesMes, error: incomeError },
+  ] = await Promise.all([
+    supabase
+      .from("payments")
+      .select("id, member_id, fee_amount, paid_at, expires_at, created_at, members(full_name)")
+      .order("paid_at", { ascending: false })
+      .limit(200),
+    getCurrentMonthIncome(),
+  ]);
 
+  const error = paymentsError ?? incomeError;
   if (error) {
+    console.error("Payments page data error", error);
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <p className="font-semibold text-foreground">Error al cargar pagos</p>
-        <p className="text-sm text-muted-foreground">{error.message}</p>
+        <p className="text-sm text-muted-foreground">Inténtalo de nuevo en unos minutos.</p>
       </div>
     );
   }
 
   const all = payments ?? [];
   const now = new Date();
-  const monthStart = startOfMonth(now);
-  const monthEnd = endOfMonth(now);
-
-  const thisMonthPayments = all.filter((p) => {
-    try {
-      return isWithinInterval(parseISO(p.paid_at), { start: monthStart, end: monthEnd });
-    } catch {
-      return false;
-    }
-  });
-
-  const ingresosMes = thisMonthPayments.reduce((sum, p) => sum + Number(p.fee_amount), 0);
+  const { start: monthStart, end: monthEnd } = currentMonthRange();
 
   return (
     <div className="space-y-6">
@@ -86,7 +84,7 @@ export default async function PagosPage() {
               </div>
             </div>
             <p className="text-4xl font-black tabular-nums text-foreground">
-              {thisMonthPayments.length}
+              {renovacionesMes}
             </p>
           </CardContent>
         </Card>
@@ -106,7 +104,7 @@ export default async function PagosPage() {
             <div className="divide-y divide-border/40">
               {all.map((p) => {
                 const member = (p.members as unknown) as { full_name: string } | null;
-                const isThisMonth = thisMonthPayments.includes(p);
+                const isThisMonth = p.paid_at >= monthStart && p.paid_at <= monthEnd;
                 return (
                   <div
                     key={p.id}

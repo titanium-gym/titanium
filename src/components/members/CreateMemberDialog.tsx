@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { memberSchema, MemberInput } from "@/lib/schemas/member";
-import { Member } from "@/lib/supabase";
+import type { Member } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,8 +16,7 @@ import {
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { format } from "date-fns";
-import { nextMonthSameDay } from "@/lib/utils/date";
+import { nextMonthSameDay, todayISO } from "@/lib/utils/date";
 import { MemberFormFields } from "./MemberFormFields";
 
 export function CreateMemberDialog({
@@ -28,7 +27,7 @@ export function CreateMemberDialog({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = todayISO();
 
   const form = useForm<MemberInput>({
     resolver: zodResolver(memberSchema),

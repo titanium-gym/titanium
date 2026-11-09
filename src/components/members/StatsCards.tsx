@@ -1,8 +1,7 @@
 "use client";
 
-import { Member } from "@/lib/supabase";
+import type { Member } from "@/lib/supabase";
 import { getExpiryStatus } from "@/lib/utils/expiry";
-import { parseISO, startOfMonth } from "date-fns";
 import { Users, TrendingUp, AlertTriangle, XCircle, Euro } from "lucide-react";
 
 type Stat = {
@@ -19,15 +18,11 @@ type Stat = {
   progressColor?: string;
 };
 
-export function StatsCards({ members }: { members: Member[] }) {
+export function StatsCards({ members, revenue }: { members: Member[]; revenue: number }) {
   const total = members.length;
   const active = members.filter((m) => getExpiryStatus(m.expires_at) === "active").length;
   const expiringSoon = members.filter((m) => getExpiryStatus(m.expires_at) === "expiring-soon").length;
   const expired = members.filter((m) => getExpiryStatus(m.expires_at) === "expired").length;
-  const thisMonthStart = startOfMonth(new Date());
-  const revenue = members
-    .filter((m) => parseISO(m.paid_at) >= thisMonthStart)
-    .reduce((sum, m) => sum + Number(m.fee_amount), 0);
 
   const stats: Stat[] = [
     {
