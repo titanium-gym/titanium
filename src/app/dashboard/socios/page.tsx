@@ -1,11 +1,13 @@
 import { Suspense } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
+import { requirePageAuth } from "@/lib/require-auth";
 import { MembersTable } from "@/components/members/MembersTable";
 import { AlertTriangle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function SociosPage() {
+  await requirePageAuth();
   const supabase = getSupabaseClient();
   const { data: members, error } = await supabase
     .from("members")

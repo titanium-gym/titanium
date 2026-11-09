@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase";
+import { requirePageAuth } from "@/lib/require-auth";
 import { formatDate } from "@/lib/utils/date";
 import { parseISO, format, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { Euro, Receipt } from "lucide-react";
@@ -13,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 export const dynamic = "force-dynamic";
 
 export default async function PagosPage() {
+  await requirePageAuth();
   const supabase = getSupabaseClient();
 
   const { data: payments, error } = await supabase
