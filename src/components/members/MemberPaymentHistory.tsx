@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Payment } from "@/lib/supabase";
+import type { Payment } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils/date";
 import { ChevronDown, ChevronUp, History } from "lucide-react";
 import { Button } from "@/components/ui/button";

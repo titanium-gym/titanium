@@ -19,13 +19,16 @@ import { parseISO, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getExpiryStatus } from "@/lib/utils/expiry";
+import { todayISO } from "@/lib/utils/date";
 
 // Only the fields this component actually reads — lets the caller (the
 // dashboard page) select a narrower column set from Supabase instead of `*`.
-type ChartMember = { paid_at: string; fee_amount: number; expires_at: string };
+type ChartMember = { expires_at: string };
+type ChartPayment = { paid_at: string; fee_amount: number };
 
 interface OverviewChartsProps {
   members: ChartMember[];
+  payments: ChartPayment[];
 }
 
 interface DonutCenterLabelProps {
@@ -72,11 +75,11 @@ const FEE_COLORS = {
   "35 €": "var(--color-chart-5)",
 };
 
-export function computeFeeData(members: ChartMember[]) {
+export function computeFeeData(payments: ChartPayment[]) {
   const buckets: Record<string, { "30 €": number; "35 €": number }> = {};
-  const now = new Date();
+  const now = parseISO(todayISO());
 
-  for (const m of members) {
+  for (const m of payments) {
     // Use parseISO so date-only strings stay in local time (avoids UTC midnight → day-before shift)
     const month = format(parseISO(m.paid_at), "MMM yy", { locale: es });
     if (!buckets[month]) buckets[month] = { "30 €": 0, "35 €": 0 };
@@ -100,7 +103,7 @@ export function computeFeeData(members: ChartMember[]) {
   }));
 }
 
-export function OverviewCharts({ members }: OverviewChartsProps) {
+export function OverviewCharts({ members, payments }: OverviewChartsProps) {
   const statusData = useMemo(() => {
     const counts = { Activos: 0, "Vence pronto": 0, Vencidos: 0 };
     for (const m of members) {
@@ -112,7 +115,7 @@ export function OverviewCharts({ members }: OverviewChartsProps) {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [members]);
 
-  const feeData = useMemo(() => computeFeeData(members), [members]);
+  const feeData = useMemo(() => computeFeeData(payments), [payments]);
 
   const hasAnyStatus = statusData.some((d) => d.value > 0);
   const activePct =

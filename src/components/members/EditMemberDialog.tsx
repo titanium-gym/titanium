@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { memberSchema, MemberInput } from "@/lib/schemas/member";
-import { Member } from "@/lib/supabase";
+import type { Member } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -79,6 +79,13 @@ class MockQueryBuilder {
     return this;
   }
 
+  gte(column: string, value: string): this {
+    this._data = this._data.filter(
+      (m) => String((m as Record<string, unknown>)[column] ?? "") >= value
+    );
+    return this;
+  }
+
   lte(column: string, value: string): this {
     this._data = this._data.filter(
       (m) => String((m as Record<string, unknown>)[column] ?? "") <= value

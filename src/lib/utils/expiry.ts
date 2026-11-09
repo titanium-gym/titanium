@@ -1,5 +1,6 @@
 import { differenceInDays, isValid, parseISO, startOfDay } from "date-fns";
 import { EXPIRY_WARNING_DAYS } from "@/lib/constants";
+import { todayISO } from "@/lib/utils/date";
 
 export type ExpiryStatus = "active" | "expiring-soon" | "expired" | "unknown";
 
@@ -8,7 +9,7 @@ export function getExpiryStatus(
   warningDays = EXPIRY_WARNING_DAYS
 ): ExpiryStatus {
   if (!expiresAt || !isValid(parseISO(expiresAt))) return "unknown";
-  const today = startOfDay(parseISO(new Date().toISOString().split("T")[0]));
+  const today = startOfDay(parseISO(todayISO()));
   const expiry = startOfDay(parseISO(expiresAt));
   const diff = differenceInDays(expiry, today);
 
@@ -18,7 +19,7 @@ export function getExpiryStatus(
 }
 
 export function getDaysUntilExpiry(expiresAt: string): number {
-  const today = startOfDay(new Date());
+  const today = startOfDay(parseISO(todayISO()));
   const expiry = startOfDay(parseISO(expiresAt));
   return differenceInDays(expiry, today);
 }

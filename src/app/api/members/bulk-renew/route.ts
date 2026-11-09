@@ -1,9 +1,8 @@
 import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
-import { format } from "date-fns";
 import { z } from "zod";
-import { nextMonthSameDay } from "@/lib/utils/date";
+import { renewalExpiry, todayISO } from "@/lib/utils/date";
 
 const bulkRenewSchema = z.object({
   ids: z
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
   }
 
   const { ids } = parsed.data;
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = todayISO();
   const supabase = getSupabaseClient();
 
   // Fetch current expires_at to preserve prepaid time
@@ -44,11 +43,9 @@ export async function POST(req: Request) {
 
   const targets = members ?? [];
 
-  // Renew each member using MAX(expires_at, today) as the base
   const updates = await Promise.all(
     targets.map((member) => {
-      const base = member.expires_at > today ? member.expires_at : today;
-      const newExpiry = nextMonthSameDay(base);
+      const newExpiry = renewalExpiry(member.expires_at, today);
       return supabase
         .from("members")
         .update({ paid_at: today, expires_at: newExpiry })
