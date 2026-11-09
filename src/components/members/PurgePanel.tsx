@@ -126,7 +126,7 @@ export function PurgePanel() {
         <div>
           <p className="text-sm font-bold text-foreground">Zona de peligro</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Los socios eliminados no se pueden recuperar. Esta acción es permanente e irreversible.
+            Los socios eliminados no se pueden recuperar. Esta acción es permanente e irreversible. Sus pagos se conservan de forma anónima.
           </p>
         </div>
       </div>
@@ -216,7 +216,7 @@ export function PurgePanel() {
                       <AlertDialogTitle>¿Eliminar {preview.length} {preview.length === 1 ? "socio" : "socios"}?</AlertDialogTitle>
                       <AlertDialogDescription>
                         Se eliminarán permanentemente todos los socios con la cuota vencida
-                        hace más de <strong>{days} días</strong>. Esta acción no se puede deshacer.
+                        hace más de <strong>{days} días</strong>. Esta acción no se puede deshacer. Sus pagos se conservarán de forma anónima.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

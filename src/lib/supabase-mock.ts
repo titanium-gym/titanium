@@ -145,12 +145,13 @@ export function createMockSupabaseClient(): ReturnType<typeof createClient> {
     expires.setMonth(expires.getMonth() + 1);
     return {
       id: i + 1,
-      member_id: i + 1,
+      // Payment 4 belongs to a deleted member
+      member_id: i === 3 ? null : i + 1,
       fee_amount: i % 2 === 0 ? 30 : 35,
       paid_at: paid.toISOString().split("T")[0],
       expires_at: expires.toISOString().split("T")[0],
       created_at: paid.toISOString(),
-      members: { full_name: `Socio ${String(i + 1).padStart(3, "0")}` },
+      members: i === 3 ? null : { full_name: `Socio ${String(i + 1).padStart(3, "0")}` },
     };
   });
 

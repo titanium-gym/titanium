@@ -25,6 +25,12 @@ test.describe("Pagos - Página de historial", () => {
     expect(body).toContain("€");
   });
 
+  test("payments of deleted members stay listed anonymously", async ({ page }) => {
+    await page.goto("/dashboard/pagos");
+    await expect(page.getByText("Socio eliminado").first()).toBeVisible();
+    await expect(page.getByText("Socio #null")).toHaveCount(0);
+  });
+
   test("pagos page renders payment list", async ({ page }) => {
     await page.goto("/dashboard/pagos");
     await page.waitForLoadState("networkidle");

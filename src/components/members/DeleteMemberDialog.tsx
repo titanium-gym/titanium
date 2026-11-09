@@ -71,7 +71,7 @@ export function DeleteMemberDialog({
           <AlertDialogTitle>¿Eliminar socio?</AlertDialogTitle>
           <AlertDialogDescription>
             Vas a eliminar a <strong>{member.full_name}</strong>. Esta acción no
-            se puede deshacer.
+            se puede deshacer. Sus pagos se conservarán de forma anónima.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

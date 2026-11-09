@@ -112,7 +112,7 @@ export default async function PagosPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground truncate">
-                        {member?.full_name ?? `Socio #${p.member_id}`}
+                        {member?.full_name ?? "Socio eliminado"}
                       </p>
                       <p className="text-[11px] text-muted-foreground tabular-nums">
                         {formatDate(p.paid_at)} → vence {formatDate(p.expires_at)}
