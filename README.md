@@ -80,6 +80,7 @@ Run the following scripts **in order** in the [Supabase SQL Editor](https://supa
 ```
 supabase/drop-all.sql                       # clean slate (optional)
 supabase/migrations/001_complete_schema.sql # schema + RLS + triggers
+supabase/migrations/002_remove_client_access.sql # no access for anon/authenticated
 supabase/seed_demo.sql                      # 100 demo members (optional)
 ```
 
