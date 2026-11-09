@@ -4,21 +4,13 @@ import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
 import { OverviewCharts } from "@/components/dashboard/LazyOverviewCharts";
 import { getCurrentMonthIncome } from "@/lib/income";
 import { todayISO } from "@/lib/utils/date";
+import { getInitials, pickByName } from "@/lib/utils/avatar";
 import { format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { AlertTriangle, Clock, TrendingUp, XCircle, Euro, Users, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export const dynamic = "force-dynamic";
-
-function getInitialsDashboard(name: string) {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
 
 const AVATAR_COLORS_DASH = [
   "from-rose-500/80 to-rose-600/80",
@@ -30,12 +22,6 @@ const AVATAR_COLORS_DASH = [
   "from-pink-500/80 to-pink-600/80",
   "from-teal-500/80 to-teal-600/80",
 ];
-
-function avatarColorDash(name: string) {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = ((h * 31) + name.charCodeAt(i)) | 0;
-  return AVATAR_COLORS_DASH[Math.abs(h) % AVATAR_COLORS_DASH.length];
-}
 
 export default async function DashboardPage() {
   await requirePageAuth();
@@ -250,8 +236,8 @@ export default async function DashboardPage() {
             <div className="grid gap-2">
               {proximosAVencer.map((m) => {
                 const days = getDaysUntilExpiry(m.expires_at);
-                const initials = getInitialsDashboard(m.full_name);
-                const avatarGrad = avatarColorDash(m.full_name);
+                const initials = getInitials(m.full_name);
+                const avatarGrad = pickByName(m.full_name, AVATAR_COLORS_DASH);
                 const isUrgent = days <= 3;
                 return (
                   <div

@@ -1,13 +1,12 @@
 import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { NextResponse } from "next/server";
-import { format, parseISO, subDays } from "date-fns";
+import { format } from "date-fns";
 import { z } from "zod";
-import { daysSchema } from "@/lib/utils/purge";
-import { todayISO } from "@/lib/utils/date";
+import { computeThreshold, daysSchema } from "@/lib/utils/purge";
 
 function thresholdDate(days: number): string {
-  return format(subDays(parseISO(todayISO()), days), "yyyy-MM-dd");
+  return format(computeThreshold(days), "yyyy-MM-dd");
 }
 
 /** GET /api/members/purge?days=N — preview affected members */
