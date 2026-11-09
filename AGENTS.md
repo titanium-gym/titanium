@@ -1,5 +1,3 @@
-<!-- BEGIN:nextjs-agent-rules -->
-# This is NOT the Next.js you know
+# Next.js version
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-<!-- END:nextjs-agent-rules -->
+This project pins Next.js 15 (see `package.json`). Its docs are not bundled in `node_modules`, so check the official docs for that major version before relying on framework APIs, and heed deprecation notices.

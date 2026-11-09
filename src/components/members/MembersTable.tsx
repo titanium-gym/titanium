@@ -6,6 +6,7 @@ import type { Member } from "@/lib/supabase";
 import { getExpiryStatus } from "@/lib/utils/expiry";
 import { formatDate, renewalExpiry, todayISO } from "@/lib/utils/date";
 import { escapeCsvCell } from "@/lib/utils/csv";
+import { getInitials, pickByName } from "@/lib/utils/avatar";
 import { PAGE_SIZE } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,15 +37,6 @@ type StatusFilter = "all" | "active" | "expiring-soon" | "expired";
 type SortField = "full_name" | "expires_at" | "fee_amount" | "paid_at";
 type SortDir = "asc" | "desc";
 
-function getInitials(name: string): string {
-  return name
-    .split(/\s+/)
-    .map((w) => w[0] ?? "")
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
-}
-
 const AVATAR_COLORS = [
   "bg-rose-600/80",
   "bg-orange-600/80",
@@ -57,9 +49,7 @@ const AVATAR_COLORS = [
 ];
 
 function getAvatarColor(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = ((h * 31) + name.charCodeAt(i)) | 0;
-  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
+  return pickByName(name, AVATAR_COLORS);
 }
 
 function StatusBadge({ expiresAt }: { expiresAt: string }) {

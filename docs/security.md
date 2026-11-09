@@ -25,8 +25,8 @@ Public routes (not protected):
 
 ## Database
 
-- **Supabase is never accessed from the client** — only from Next.js API routes using `SUPABASE_SERVICE_ROLE_KEY`.
-- **RLS enabled** — Row Level Security is active on all tables. There are no public policies; the `service_role` key bypasses RLS on the server.
+- **Supabase is never accessed from the client** — only from server components and API routes using `SUPABASE_SERVICE_ROLE_KEY`.
+- **RLS enabled** — Row Level Security is active on all tables, and the `service_role` key bypasses it on the server. The policies in `001_complete_schema.sql` grant full access to Supabase's `authenticated` role, which the app does not use, so keep Supabase Auth sign-ups disabled.
 - **`SUPABASE_SERVICE_ROLE_KEY` is a server-only variable** — it is never bundled into the client.
 
 ## HTTP Security Headers
@@ -37,9 +37,9 @@ Configured in `next.config.ts` (static headers applied to all routes):
 |--------|-------|
 | `X-Content-Type-Options` | `nosniff` |
 | `X-Frame-Options` | `DENY` |
-| `X-XSS-Protection` | `1; mode=block` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
-| `Strict-Transport-Security` | `max-age=63072000; includeSubDomains; preload` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=()` |
 
 The middleware adds a per-request **CSP nonce** via `src/middleware.ts`, and applies an **in-memory IP-based rate limiter** to all non-auth routes.
 
