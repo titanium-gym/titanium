@@ -42,9 +42,11 @@ export async function POST(req: Request) {
 
   if (fetchErr) return NextResponse.json({ error: "Failed to fetch members" }, { status: 500 });
 
+  const targets = members ?? [];
+
   // Renew each member using MAX(expires_at, today) as the base
   const updates = await Promise.all(
-    (members ?? []).map((member) => {
+    targets.map((member) => {
       const base = member.expires_at > today ? member.expires_at : today;
       const newExpiry = nextMonthSameDay(base);
       return supabase
@@ -56,22 +58,31 @@ export async function POST(req: Request) {
     })
   );
 
-  const failed = updates.filter((u) => u.error);
-  if (failed.length > 0) {
-    return NextResponse.json({ error: "Failed to renew some members" }, { status: 500 });
+  const renewed = updates.flatMap((u) => (u.error || !u.data ? [] : [u.data]));
+  const failedIds = targets
+    .filter((_, i) => updates[i].error || !updates[i].data)
+    .map((m) => String(m.id));
+
+  if (targets.length > 0 && renewed.length === 0) {
+    return NextResponse.json({ error: "Failed to renew members" }, { status: 500 });
   }
 
-  const renewed = updates.map((u) => u.data!);
-
   // Register payments in history (best-effort)
-  await supabase.from("payments").insert(
-    renewed.map((m) => ({
-      member_id: m.id,
-      fee_amount: m.fee_amount,
-      paid_at: m.paid_at,
-      expires_at: m.expires_at,
-    }))
-  );
+  if (renewed.length > 0) {
+    await supabase.from("payments").insert(
+      renewed.map((m) => ({
+        member_id: m.id,
+        fee_amount: m.fee_amount,
+        paid_at: m.paid_at,
+        expires_at: m.expires_at,
+      }))
+    );
+  }
 
-  return NextResponse.json({ updated: renewed });
+  // Partial success is reported per member: those renewed must not be retried,
+  // or their expiry would be extended twice.
+  return NextResponse.json(
+    { updated: renewed, failedIds },
+    { status: failedIds.length > 0 ? 207 : 200 }
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useSearchParams, usePathname } from "next/navigation";
 import { Member } from "@/lib/supabase";
 import { getExpiryStatus } from "@/lib/utils/expiry";
 import { formatDate } from "@/lib/utils/date";
@@ -153,11 +153,16 @@ function exportCSV(members: Member[]) {
 }
 
 export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const [members, setMembers] = useState<Member[]>(initialMembers);
+  // Pick up fresh server data from AutoRefresh; useState only reads its initial value.
+  const [syncedMembers, setSyncedMembers] = useState(initialMembers);
+  if (initialMembers !== syncedMembers) {
+    setSyncedMembers(initialMembers);
+    setMembers(initialMembers);
+  }
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>(
     () => (searchParams.get("status") as StatusFilter) ?? "all"
@@ -175,9 +180,12 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
       if (newSearch) params.set("q", newSearch);
       if (newStatus !== "all") params.set("status", newStatus);
       if (newPage > 1) params.set("page", String(newPage));
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      // history.replaceState, not router.replace: filtering is client-side, and
+      // a router navigation would re-fetch every member on each keystroke.
+      const query = params.toString();
+      window.history.replaceState(null, "", query ? `${pathname}?${query}` : pathname);
     },
-    [router, pathname]
+    [pathname]
   );
 
   function handleSort(field: SortField) {
@@ -289,10 +297,14 @@ export function MembersTable({ initialMembers }: { initialMembers: Member[] }) {
         body: JSON.stringify({ ids }),
       });
       if (!res.ok) { toast.error("Error al renovar"); return; }
-      const { updated } = await res.json() as { updated: Member[] };
+      const { updated, failedIds = [] } = await res.json() as { updated: Member[]; failedIds?: string[] };
       updated.forEach(handleUpdated);
-      toast.success(`${updated.length} socios renovados correctamente`);
-      setSelectedIds(new Set());
+      if (failedIds.length > 0) {
+        toast.error(`${updated.length} renovados, ${failedIds.length} con error. Siguen seleccionados para reintentar.`);
+      } else {
+        toast.success(`${updated.length} socios renovados correctamente`);
+      }
+      setSelectedIds(new Set(failedIds.map(Number)));
     } catch {
       toast.error("Error de conexión");
     } finally {

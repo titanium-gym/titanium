@@ -68,6 +68,22 @@ export async function PUT(
   }
 
   const supabase = getSupabaseClient();
+
+  // The edit form always sends paid_at, so compare it with the stored value:
+  // only a changed date is a new payment.
+  let paidAtChanged = false;
+  if (updateData.paid_at !== undefined) {
+    const { data: current, error: fetchError } = await supabase
+      .from("members")
+      .select("paid_at")
+      .eq("id", id)
+      .single();
+    if (fetchError || !current) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    paidAtChanged = current.paid_at !== updateData.paid_at;
+  }
+
   const { data, error } = await supabase
     .from("members")
     .update(updateData)
@@ -77,8 +93,8 @@ export async function PUT(
 
   if (error) return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
 
-  // If paid_at was updated (renewal), record payment in history
-  if (updateData.paid_at !== undefined) {
+  // If paid_at changed (renewal), record payment in history
+  if (paidAtChanged) {
     await supabase.from("payments").insert({
       member_id: Number(id),
       fee_amount: data.fee_amount,
