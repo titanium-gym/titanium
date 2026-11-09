@@ -5,7 +5,7 @@
 - **Google OAuth only** — no self-registration, no username/password forms.
 - **Email allowlist** — NextAuth's `signIn` callback checks `profile.email` against the `ALLOWED_EMAILS` list. Any other account is rejected server-side before a session is created.
 - **Signed JWT** — sessions use JWTs signed with `NEXTAUTH_SECRET` (minimum 32 chars). Without a valid secret, all tokens are invalid.
-- **Session expiry** — 24 hours. After expiry the middleware redirects to `/login`.
+- **Session expiry** — 4 hours. After expiry the middleware redirects to `/login`.
 
 ## Route Protection
 
@@ -16,8 +16,10 @@ Request → Middleware → Valid session? → Yes → Content
                                       → No  → Redirect /login
 ```
 
+API requests get a `401` instead of a redirect. Pages and API handlers also check the session themselves (`requirePageAuth()` / `requireAuth()`), because layouts are skipped on client navigations.
+
 Public routes (not protected):
-- `/login`
+- `/`, `/login`, `/robots.txt` and the apple-touch icons (`PUBLIC_PATHS` in `src/middleware.ts`)
 - `/api/auth/*` (NextAuth callbacks)
 - Static assets (`_next/static`, `_next/image`, etc.)
 

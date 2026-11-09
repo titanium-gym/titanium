@@ -1,5 +1,5 @@
-import { auth, signOut } from "@/auth";
-import { redirect } from "next/navigation";
+import { signOut } from "@/auth";
+import { requirePageAuth } from "@/lib/require-auth";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -12,12 +12,10 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const bypass = process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
-  const session = await auth();
-  if (!session && !bypass) redirect("/login");
+  const session = await requirePageAuth();
   const user = {
-    name: session?.user?.name ?? (bypass ? "Dev" : null),
-    email: session?.user?.email ?? (bypass ? "dev@localhost" : null),
+    name: session.user?.name ?? null,
+    email: session.user?.email ?? null,
   };
 
   return (

@@ -5,8 +5,15 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
 
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn(() => {
+    throw new Error("NEXT_REDIRECT");
+  }),
+}));
+
 import { auth } from "@/auth";
-import { requireAuth } from "@/lib/require-auth";
+import { redirect } from "next/navigation";
+import { requireAuth, requirePageAuth } from "@/lib/require-auth";
 
 const mockAuth = vi.mocked(auth);
 
@@ -49,6 +56,7 @@ describe("requireAuth", () => {
 
   it("returns the session when the user is authenticated", async () => {
     vi.stubEnv("BYPASS_AUTH", "false");
+    vi.stubEnv("ALLOWED_EMAILS", "user@example.com");
     const session = { user: { email: "user@example.com", name: "Test User" } };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockAuth.mockResolvedValueOnce(session as any);
@@ -56,5 +64,43 @@ describe("requireAuth", () => {
     const result = await requireAuth();
 
     expect(result).toEqual(session);
+  });
+
+  it("returns null when the session email is no longer allowed", async () => {
+    vi.stubEnv("BYPASS_AUTH", "false");
+    vi.stubEnv("ALLOWED_EMAILS", "other@example.com");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockAuth.mockResolvedValueOnce({ user: { email: "user@example.com" } } as any);
+
+    const result = await requireAuth();
+
+    expect(result).toBeNull();
+  });
+});
+
+describe("requirePageAuth", () => {
+  beforeEach(() => {
+    vi.unstubAllEnvs();
+    mockAuth.mockReset();
+    vi.mocked(redirect).mockClear();
+  });
+
+  it("redirects to /login when there is no session", async () => {
+    vi.stubEnv("BYPASS_AUTH", "false");
+    mockAuth.mockResolvedValueOnce(null);
+
+    await expect(requirePageAuth()).rejects.toThrow("NEXT_REDIRECT");
+    expect(redirect).toHaveBeenCalledWith("/login");
+  });
+
+  it("returns the session for an allowed user", async () => {
+    vi.stubEnv("BYPASS_AUTH", "false");
+    vi.stubEnv("ALLOWED_EMAILS", "user@example.com");
+    const session = { user: { email: "user@example.com" } };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    mockAuth.mockResolvedValueOnce(session as any);
+
+    await expect(requirePageAuth()).resolves.toEqual(session);
+    expect(redirect).not.toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
 import { getSupabaseClient } from "@/lib/supabase";
+import { requirePageAuth } from "@/lib/require-auth";
 import { getExpiryStatus, getDaysUntilExpiry } from "@/lib/utils/expiry";
 import { OverviewCharts } from "@/components/dashboard/LazyOverviewCharts";
 import { parseISO, startOfMonth } from "date-fns";
@@ -35,6 +36,7 @@ function avatarColorDash(name: string) {
 }
 
 export default async function DashboardPage() {
+  await requirePageAuth();
   const supabase = getSupabaseClient();
   const { data: members, error } = await supabase
     .from("members")

@@ -1,6 +1,8 @@
 import { PurgePanel } from "@/components/members/PurgePanel";
+import { requirePageAuth } from "@/lib/require-auth";
 
-export default function DepuracionPage() {
+export default async function DepuracionPage() {
+  await requirePageAuth();
   return (
     <div className="space-y-6">
       <div>

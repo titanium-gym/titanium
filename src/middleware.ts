@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authConfig } from "@/auth.config";
+import { authConfig, isSessionEmailAllowed } from "@/auth.config";
 import { NextRequest, NextResponse } from "next/server";
 
 const { auth } = NextAuth(authConfig);
@@ -19,7 +19,9 @@ function buildCsp(nonce: string): string {
     isProd
       ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`
       : "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-    isProd ? `style-src 'self' 'nonce-${nonce}'` : "style-src 'self' 'unsafe-inline'",
+    // Inline styles stay allowed: a nonce cannot cover style="" attributes,
+    // which the login page, progress bars and charts rely on.
+    "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https://lh3.googleusercontent.com",
     isProd
       ? `connect-src 'self' https://accounts.google.com ${supabaseUrl}`
@@ -90,19 +92,29 @@ function maybeCleanup() {
 // Middleware — rate limiting + NextAuth session check
 // ---------------------------------------------------------------------------
 
+// Everything else requires an allowed session. NextAuth ignores the
+// `authorized` callback when middleware has a handler, so it is checked here.
+const PUBLIC_PATHS = new Set([
+  "/",
+  "/login",
+  "/robots.txt",
+  "/apple-touch-icon.png",
+  "/apple-touch-icon-precomposed.png",
+]);
+
 export default auth((req) => {
   maybeCleanup();
 
   const ip = getIp(req);
   const { pathname } = req.nextUrl;
   const limit = getLimit(pathname, req.method);
+  const isApi = pathname.startsWith("/api/");
 
   const rateLimitDisabled =
     process.env.NODE_ENV !== "production" &&
     process.env.RATE_LIMIT_DISABLED === "true";
 
   if (!rateLimitDisabled && !allow(ip, limit)) {
-    const isApi = pathname.startsWith("/api/");
     if (isApi) {
       return NextResponse.json(
         { error: "Too many requests. Try again in a minute." },
@@ -115,14 +127,31 @@ export default auth((req) => {
     });
   }
 
-  // Attach a fresh nonce to the request headers (available to server components
-  // via `headers().get("x-nonce")`) and set the CSP response header.
+  const authBypassed =
+    process.env.NODE_ENV !== "production" &&
+    process.env.BYPASS_AUTH === "true";
+
+  if (
+    !authBypassed &&
+    !PUBLIC_PATHS.has(pathname) &&
+    !isSessionEmailAllowed(req.auth?.user?.email)
+  ) {
+    if (isApi) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return NextResponse.redirect(new URL("/login", req.nextUrl));
+  }
+
+  // Next.js takes the nonce for its own scripts from the CSP *request* header,
+  // so the policy has to be set on both the request and the response.
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
+  const csp = buildCsp(nonce);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", csp);
 
   const response = NextResponse.next({ request: { headers: requestHeaders } });
-  response.headers.set("Content-Security-Policy", buildCsp(nonce));
+  response.headers.set("Content-Security-Policy", csp);
   return response;
 });
 
