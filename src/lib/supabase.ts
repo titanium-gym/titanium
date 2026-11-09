@@ -28,7 +28,7 @@ export type Member = {
 
 export type Payment = {
   id: number;
-  member_id: number;
+  member_id: number | null;
   fee_amount: number;
   paid_at: string;
   expires_at: string;

@@ -19,6 +19,7 @@ Go to [Supabase SQL Editor](https://supabase.com/dashboard/project/_/sql/new) an
 ```
 supabase/migrations/001_complete_schema.sql
 supabase/migrations/002_remove_client_access.sql
+supabase/migrations/003_keep_payments_on_member_delete.sql
 ```
 
 > ⚠️ Migrations are **manual** — there is no automated migration step in CI/CD.
