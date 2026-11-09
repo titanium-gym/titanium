@@ -46,5 +46,5 @@ Never use `page.request.*` for mutations, because it skips the route mocks. Use 
 
 - UI copy is Spanish; keep the domain wording (`socios`, `vencimiento`, `cuota`, `inicio`).
 - Fee tiers (`30`, `35`) are defined in `src/lib/constants.ts`, and also in the `members.fee_amount` SQL CHECK and the `z.ZodLiteral` tuple in `src/lib/schemas/member.ts`. Changing them also affects the form select, dashboard charts, and tests.
-- Migrations are manual: run SQL in the Supabase SQL Editor (`supabase/migrations/001_complete_schema.sql`). CI/CD applies nothing.
+- Migrations are manual: run SQL in the Supabase SQL Editor (`supabase/migrations/`, in order). CI/CD applies nothing.
 - `src/tests/unit/project-structure.test.ts` asserts specific files and strings exist (e.g. `public_read_members` in the schema, `force-dynamic` in `src/app/page.tsx`), so moving or renaming those fails unit tests.

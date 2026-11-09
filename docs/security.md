@@ -26,7 +26,7 @@ Public routes (not protected):
 ## Database
 
 - **Supabase is never accessed from the client** — only from server components and API routes using `SUPABASE_SERVICE_ROLE_KEY`.
-- **RLS enabled** — Row Level Security is active on all tables, and the `service_role` key bypasses it on the server. The policies in `001_complete_schema.sql` grant full access to Supabase's `authenticated` role, which the app does not use, so keep Supabase Auth sign-ups disabled.
+- **RLS enabled** — Row Level Security is active on all tables, and the `service_role` key bypasses it on the server. `002_remove_client_access.sql` removes every policy and table privilege from the unused `anon` and `authenticated` roles. Keep Supabase Auth sign-ups disabled.
 - **`SUPABASE_SERVICE_ROLE_KEY` is a server-only variable** — it is never bundled into the client.
 
 ## HTTP Security Headers
