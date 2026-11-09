@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { currentMonthRange, renewalExpiry, todayISO } from "@/lib/utils/date";
+import { currentMonthRange, renewalExpiry, todayISO, isPaymentDateCorrection } from "@/lib/utils/date";
 import { getExpiryStatus } from "@/lib/utils/expiry";
 import { escapeCsvCell } from "@/lib/utils/csv";
 
@@ -40,5 +40,39 @@ describe("escapeCsvCell", () => {
 
   it("leaves ordinary text alone and doubles quotes", () => {
     expect(escapeCsvCell('Ana "la" Ruiz')).toBe('"Ana ""la"" Ruiz"');
+  });
+});
+
+describe("isPaymentDateCorrection", () => {
+  const dates = (paid_at: string, expires_at: string) => ({ paid_at, expires_at });
+
+  it("treats a shifted date with the same expiry as a correction", () => {
+    expect(
+      isPaymentDateCorrection(dates("2026-09-29", "2026-10-29"), dates("2026-10-01", "2026-10-29"))
+    ).toBe(true);
+  });
+
+  it("treats a backdated fix as a correction", () => {
+    expect(
+      isPaymentDateCorrection(dates("2026-10-15", "2026-11-15"), dates("2026-10-07", "2026-11-07"))
+    ).toBe(true);
+  });
+
+  it("treats a monthly renewal as a new payment", () => {
+    expect(
+      isPaymentDateCorrection(dates("2026-10-03", "2026-11-03"), dates("2026-11-03", "2026-12-03"))
+    ).toBe(false);
+  });
+
+  it("treats an early renewal from the edit form as a new payment", () => {
+    expect(
+      isPaymentDateCorrection(dates("2026-09-29", "2026-10-29"), dates("2026-10-25", "2026-11-25"))
+    ).toBe(false);
+  });
+
+  it("treats a prepaid month a few days later as a new payment", () => {
+    expect(
+      isPaymentDateCorrection(dates("2026-11-03", "2026-12-03"), dates("2026-11-05", "2027-01-03"))
+    ).toBe(false);
   });
 });

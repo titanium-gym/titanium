@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { memberUpdateSchema } from "@/lib/schemas/member";
+import { isPaymentDateCorrection } from "@/lib/utils/date";
 import { NextResponse } from "next/server";
 
 const MEMBER_ID_RE = /^\d+$/;
@@ -70,18 +71,18 @@ export async function PUT(
   const supabase = getSupabaseClient();
 
   // The edit form always sends paid_at, so compare it with the stored value:
-  // only a changed date is a new payment.
-  let paidAtChanged = false;
+  // only a changed date affects the payment history.
+  let previous: { paid_at: string; expires_at: string } | null = null;
   if (updateData.paid_at !== undefined) {
     const { data: current, error: fetchError } = await supabase
       .from("members")
-      .select("paid_at")
+      .select("paid_at, expires_at")
       .eq("id", id)
       .single();
     if (fetchError || !current) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    paidAtChanged = current.paid_at !== updateData.paid_at;
+    if (current.paid_at !== updateData.paid_at) previous = current;
   }
 
   const { data, error } = await supabase
@@ -93,14 +94,31 @@ export async function PUT(
 
   if (error) return NextResponse.json({ error: "Failed to update member" }, { status: 500 });
 
-  // If paid_at changed (renewal), record payment in history
-  if (paidAtChanged) {
-    await supabase.from("payments").insert({
+  if (previous) {
+    const payment = {
       member_id: Number(id),
       fee_amount: data.fee_amount,
       paid_at: data.paid_at,
       expires_at: data.expires_at,
-    });
+    };
+
+    // A date correction amends the payment it fixes; a renewal adds a new one.
+    const { data: corrected } = isPaymentDateCorrection(previous, data)
+      ? await supabase
+          .from("payments")
+          .select("id")
+          .eq("member_id", payment.member_id)
+          .eq("paid_at", previous.paid_at)
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : { data: null };
+
+    if (corrected) {
+      await supabase.from("payments").update(payment).eq("id", corrected.id);
+    } else {
+      await supabase.from("payments").insert(payment);
+    }
   }
 
   return NextResponse.json(data);

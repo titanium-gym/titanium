@@ -8,11 +8,19 @@ vi.mock("@/lib/require-auth", () => ({
 const singleMock = vi.fn();
 const inMock = vi.fn();
 const insertMock = vi.fn().mockResolvedValue({ error: null });
+const updateMock = vi.fn();
+const maybeSingleMock = vi.fn();
 
 const builder = {
   select: () => builder,
-  update: () => builder,
+  update: (values: unknown) => {
+    updateMock(values);
+    return builder;
+  },
   eq: () => builder,
+  order: () => builder,
+  limit: () => builder,
+  maybeSingle: maybeSingleMock,
   in: inMock,
   single: singleMock,
   insert: insertMock,
@@ -42,12 +50,14 @@ const member = (id: number) => ({
 describe("PUT /api/members/[id] payment history", () => {
   beforeEach(() => {
     singleMock.mockReset();
+    maybeSingleMock.mockReset();
     insertMock.mockClear();
+    updateMock.mockClear();
   });
 
   it("does not record a payment when paid_at is unchanged", async () => {
     singleMock
-      .mockResolvedValueOnce({ data: { paid_at: "2025-02-01" }, error: null })
+      .mockResolvedValueOnce({ data: { paid_at: "2025-02-01", expires_at: "2025-03-01" }, error: null })
       .mockResolvedValueOnce({ data: member(1), error: null });
 
     const res = await put({ paid_at: "2025-02-01", notes: "typo fixed" });
@@ -58,7 +68,7 @@ describe("PUT /api/members/[id] payment history", () => {
 
   it("records a payment when paid_at changes", async () => {
     singleMock
-      .mockResolvedValueOnce({ data: { paid_at: "2025-01-01" }, error: null })
+      .mockResolvedValueOnce({ data: { paid_at: "2025-01-01", expires_at: "2025-02-01" }, error: null })
       .mockResolvedValueOnce({ data: member(1), error: null });
 
     await put({ paid_at: "2025-02-01", expires_at: "2025-03-01" });
@@ -67,6 +77,31 @@ describe("PUT /api/members/[id] payment history", () => {
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({ member_id: 1, paid_at: "2025-02-01" })
     );
+  });
+
+  it("amends the last payment when paid_at is only corrected", async () => {
+    singleMock
+      .mockResolvedValueOnce({ data: { paid_at: "2025-01-30", expires_at: "2025-02-28" }, error: null })
+      .mockResolvedValueOnce({ data: member(1), error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: { id: 7 }, error: null });
+
+    await put({ paid_at: "2025-02-01", expires_at: "2025-03-01" });
+
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(updateMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({ member_id: 1, paid_at: "2025-02-01", expires_at: "2025-03-01" })
+    );
+  });
+
+  it("records a payment when a corrected date has no payment to amend", async () => {
+    singleMock
+      .mockResolvedValueOnce({ data: { paid_at: "2025-01-30", expires_at: "2025-02-28" }, error: null })
+      .mockResolvedValueOnce({ data: member(1), error: null });
+    maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
+
+    await put({ paid_at: "2025-02-01", expires_at: "2025-03-01" });
+
+    expect(insertMock).toHaveBeenCalledOnce();
   });
 
   it("skips the lookup when paid_at is not sent", async () => {
