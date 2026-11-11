@@ -25,6 +25,18 @@ test.describe("Pagos - Página de historial", () => {
     expect(body).toContain("€");
   });
 
+  test("KPI cards name the current month in Spanish", async ({ page }) => {
+    await page.goto("/dashboard/pagos");
+
+    const month = new Intl.DateTimeFormat("es-ES", {
+      month: "long",
+      timeZone: "Europe/Madrid",
+    }).format(new Date());
+
+    await expect(page.getByText(`Ingresos · ${month}`)).toBeVisible();
+    await expect(page.getByText(`Renovaciones · ${month}`)).toBeVisible();
+  });
+
   test("payments of deleted members stay listed anonymously", async ({ page }) => {
     await page.goto("/dashboard/pagos");
     await expect(page.getByText("Socio eliminado").first()).toBeVisible();
