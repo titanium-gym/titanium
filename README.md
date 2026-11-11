@@ -83,6 +83,7 @@ supabase/migrations/001_complete_schema.sql # schema + RLS + triggers
 supabase/migrations/002_remove_client_access.sql # no access for anon/authenticated
 supabase/migrations/003_keep_payments_on_member_delete.sql # payments survive member deletion
 supabase/migrations/004_fix_function_search_path.sql # pin trigger function search_path
+supabase/migrations/005_keep_alive_function.sql # keep_alive() for the keep-alive workflow
 supabase/seed_demo.sql                      # 100 demo members (optional)
 ```
 

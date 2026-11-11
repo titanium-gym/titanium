@@ -21,6 +21,7 @@ supabase/migrations/001_complete_schema.sql
 supabase/migrations/002_remove_client_access.sql
 supabase/migrations/003_keep_payments_on_member_delete.sql
 supabase/migrations/004_fix_function_search_path.sql
+supabase/migrations/005_keep_alive_function.sql
 ```
 
 > ⚠️ Migrations are **manual** — there is no automated migration step in CI/CD.
@@ -101,14 +102,14 @@ Also add these for the keep-alive workflow:
 | Secret | Value |
 |--------|-------|
 | `SUPABASE_URL` | Same as above |
-| `SUPABASE_SERVICE_ROLE_KEY` | Same as above |
+| `SUPABASE_ANON_KEY` | Supabase Dashboard → Settings → API (anon key) |
 
 ### Automatic flow
 
 ```
 PR opened  → CI (unit tests + type check + build) must pass
 Push main  → tests pass → Vercel auto-deploys to production
-Daily cron → keep-alive.yml sends 25 read requests to prevent Supabase free-tier pause
+Every 3 h  → keep-alive.yml calls the keep_alive() function to prevent Supabase free-tier pause
 ```
 
 ---

@@ -13,37 +13,37 @@ jobs:
     name: Ping Supabase DB
     runs-on: ubuntu-latest
     steps:
-      - name: Keep-alive — multiple read-only requests
+      - name: Keep-alive — multiple database requests
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           set -euo pipefail
 
-          # Anon key only: RLS restricts members/payments to the "authenticated"
-          # role, so these calls never return real member data (safe for a
-          # public repo's Actions logs) — they only exercise the DB connection.
-          # Several distinct requests per run, instead of a single ping, to
-          # generate a clearer activity signal for Supabase.
+          # Anon key only: anon has no access to members/payments (see
+          # 002_remove_client_access.sql), so the ping goes through the
+          # keep_alive() function from 005_keep_alive_function.sql, which runs
+          # a query on the database and returns no data.
+          # Several requests per run, instead of a single ping, to generate a
+          # clearer activity signal for Supabase.
           # curl's --oauth2-bearer flag builds the required OAuth-style auth
           # header for us, from the same anon key used for "apikey".
-          declare -a ENDPOINTS=(
-            "members?select=id&limit=100"
-            "members?select=id&order=id.desc&limit=100"
-            "payments?select=id&limit=100"
-          )
+          ENDPOINT="rpc/keep_alive"
 
           FAILED=0
-          for endpoint in "${ENDPOINTS[@]}"; do
+          for attempt in 1 2 3; do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -X POST \
               --oauth2-bearer "${SUPABASE_ANON_KEY}" \
               -H "apikey: ${SUPABASE_ANON_KEY}" \
-              "${SUPABASE_URL}/rest/v1/${endpoint}")
+              -H "Content-Type: application/json" \
+              -d '{}' \
+              "${SUPABASE_URL}/rest/v1/${ENDPOINT}")
 
             if [[ "$STATUS" =~ ^2 ]]; then
-              echo "✅ ${endpoint} -> HTTP ${STATUS}"
+              echo "✅ ${ENDPOINT} (${attempt}/3) -> HTTP ${STATUS}"
             else
-              echo "❌ ${endpoint} -> HTTP ${STATUS}"
+              echo "❌ ${ENDPOINT} (${attempt}/3) -> HTTP ${STATUS}"
               FAILED=1
             fi
           done
