@@ -24,14 +24,15 @@ jobs:
           # 002_remove_client_access.sql), so the ping goes through the
           # keep_alive() function from 005_keep_alive_function.sql, which runs
           # a query on the database and returns no data.
-          # Several requests per run, instead of a single ping, to generate a
-          # clearer activity signal for Supabase.
+          # Many requests per run, instead of a single ping: Supabase pauses
+          # free projects for low usage as well as for inactivity.
           # curl's --oauth2-bearer flag builds the required OAuth-style auth
           # header for us, from the same anon key used for "apikey".
           ENDPOINT="rpc/keep_alive"
+          REQUESTS=25
 
           FAILED=0
-          for attempt in 1 2 3; do
+          for attempt in $(seq 1 "$REQUESTS"); do
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
               -X POST \
               --oauth2-bearer "${SUPABASE_ANON_KEY}" \
@@ -41,9 +42,9 @@ jobs:
               "${SUPABASE_URL}/rest/v1/${ENDPOINT}")
 
             if [[ "$STATUS" =~ ^2 ]]; then
-              echo "✅ ${ENDPOINT} (${attempt}/3) -> HTTP ${STATUS}"
+              echo "✅ ${ENDPOINT} (${attempt}/${REQUESTS}) -> HTTP ${STATUS}"
             else
-              echo "❌ ${ENDPOINT} (${attempt}/3) -> HTTP ${STATUS}"
+              echo "❌ ${ENDPOINT} (${attempt}/${REQUESTS}) -> HTTP ${STATUS}"
               FAILED=1
             fi
           done

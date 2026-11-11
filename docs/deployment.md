@@ -109,7 +109,7 @@ Also add these for the keep-alive workflow:
 ```
 PR opened  → CI (unit tests + type check + build) must pass
 Push main  → tests pass → Vercel auto-deploys to production
-Every 3 h  → keep-alive.yml calls the keep_alive() function to prevent Supabase free-tier pause
+Every 3 h  → keep-alive.yml calls the keep_alive() function 25 times to prevent Supabase free-tier pause
 ```
 
 ---
