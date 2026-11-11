@@ -65,6 +65,21 @@ test.describe("User Workflows", () => {
     await expect(createButton).toBeVisible();
   });
 
+  test("Sort: a key press on a column header toggles the order once", async ({ page }) => {
+    await page.goto("/dashboard/socios");
+    await page.waitForLoadState("networkidle");
+
+    const header = page.getByRole("columnheader", { name: "Vencimiento" });
+    await expect(header).toHaveAttribute("aria-sort", "ascending");
+
+    await header.getByRole("button").focus();
+    await page.keyboard.press("Enter");
+    await expect(header).toHaveAttribute("aria-sort", "descending");
+
+    await page.keyboard.press("Space");
+    await expect(header).toHaveAttribute("aria-sort", "ascending");
+  });
+
   test("Renew: member can be renewed via API", async ({ page }) => {
     await setupApiMocks(page);
     await page.goto("/dashboard");

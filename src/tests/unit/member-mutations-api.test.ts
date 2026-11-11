@@ -66,6 +66,34 @@ describe("PUT /api/members/[id] payment history", () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
+  it("records a payment when a member is renewed again on the same day", async () => {
+    singleMock
+      .mockResolvedValueOnce({ data: { paid_at: "2025-02-01", expires_at: "2025-03-01" }, error: null })
+      .mockResolvedValueOnce({
+        data: { ...member(1), expires_at: "2025-04-01" },
+        error: null,
+      });
+
+    await put({ paid_at: "2025-02-01", expires_at: "2025-04-01" });
+
+    expect(insertMock).toHaveBeenCalledOnce();
+    expect(insertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ member_id: 1, paid_at: "2025-02-01", expires_at: "2025-04-01" })
+    );
+    expect(maybeSingleMock).not.toHaveBeenCalled();
+  });
+
+  it("does not record a payment when only the expiry is adjusted", async () => {
+    singleMock
+      .mockResolvedValueOnce({ data: { paid_at: "2025-02-01", expires_at: "2025-03-01" }, error: null })
+      .mockResolvedValueOnce({ data: { ...member(1), expires_at: "2025-03-05" }, error: null });
+
+    await put({ paid_at: "2025-02-01", expires_at: "2025-03-05" });
+
+    expect(insertMock).not.toHaveBeenCalled();
+    expect(maybeSingleMock).not.toHaveBeenCalled();
+  });
+
   it("records a payment when paid_at changes", async () => {
     singleMock
       .mockResolvedValueOnce({ data: { paid_at: "2025-01-01", expires_at: "2025-02-01" }, error: null })

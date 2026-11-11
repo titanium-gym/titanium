@@ -46,15 +46,20 @@ interface Bucket {
 const hits = new Map<string, Bucket>();
 const WINDOW_MS = 60_000; // 1 minute
 
-function getLimit(pathname: string, method: string): number {
-  if (pathname === "/login") return 10;
+interface Limit {
+  scope: string;
+  max: number;
+}
+
+function getLimit(pathname: string, method: string): Limit {
+  if (pathname === "/login") return { scope: "login", max: 10 };
   if (
     pathname.startsWith("/api/") &&
     (method === "POST" || method === "PUT" || method === "DELETE")
   )
-    return 30;
-  if (pathname.startsWith("/api/")) return 60;
-  return 200;
+    return { scope: "api-write", max: 30 };
+  if (pathname.startsWith("/api/")) return { scope: "api-read", max: 60 };
+  return { scope: "page", max: 200 };
 }
 
 function getIp(req: NextRequest): string {
@@ -65,14 +70,17 @@ function getIp(req: NextRequest): string {
   );
 }
 
-function allow(ip: string, limit: number): boolean {
+// Each scope counts on its own: a shared counter would let ordinary page
+// views use up the much smaller /login allowance.
+function allow(ip: string, limit: Limit): boolean {
   const now = Date.now();
-  const bucket = hits.get(ip);
+  const key = `${ip}:${limit.scope}`;
+  const bucket = hits.get(key);
   if (!bucket || now - bucket.windowStart > WINDOW_MS) {
-    hits.set(ip, { n: 1, windowStart: now });
+    hits.set(key, { n: 1, windowStart: now });
     return true;
   }
-  if (bucket.n >= limit) return false;
+  if (bucket.n >= limit.max) return false;
   bucket.n++;
   return true;
 }

@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { currentMonthRange, renewalExpiry, todayISO, isPaymentDateCorrection } from "@/lib/utils/date";
+import {
+  affectsPaymentHistory,
+  currentMonthRange,
+  renewalExpiry,
+  todayISO,
+  isPaymentDateCorrection,
+} from "@/lib/utils/date";
 import { getExpiryStatus } from "@/lib/utils/expiry";
 import { escapeCsvCell } from "@/lib/utils/csv";
 
@@ -74,5 +80,39 @@ describe("isPaymentDateCorrection", () => {
     expect(
       isPaymentDateCorrection(dates("2026-11-03", "2026-12-03"), dates("2026-11-05", "2027-01-03"))
     ).toBe(false);
+  });
+});
+
+describe("affectsPaymentHistory", () => {
+  const dates = (paid_at: string, expires_at: string) => ({ paid_at, expires_at });
+
+  it("ignores an edit that keeps both dates", () => {
+    expect(
+      affectsPaymentHistory(dates("2026-11-03", "2026-12-03"), dates("2026-11-03", "2026-12-03"))
+    ).toBe(false);
+  });
+
+  it("ignores a small expiry adjustment on the same paid_at", () => {
+    expect(
+      affectsPaymentHistory(dates("2026-11-03", "2026-12-03"), dates("2026-11-03", "2026-12-10"))
+    ).toBe(false);
+  });
+
+  it("counts a second renewal on the same day", () => {
+    expect(
+      affectsPaymentHistory(dates("2026-11-03", "2026-12-03"), dates("2026-11-03", "2027-01-03"))
+    ).toBe(true);
+  });
+
+  it("counts a same-day renewal across February", () => {
+    expect(
+      affectsPaymentHistory(dates("2027-01-31", "2027-01-31"), dates("2027-01-31", "2027-02-28"))
+    ).toBe(true);
+  });
+
+  it("counts any change of paid_at", () => {
+    expect(
+      affectsPaymentHistory(dates("2026-11-03", "2026-12-03"), dates("2026-11-04", "2026-12-03"))
+    ).toBe(true);
   });
 });
