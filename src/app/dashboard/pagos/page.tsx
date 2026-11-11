@@ -1,8 +1,9 @@
 import { getSupabaseClient } from "@/lib/supabase";
 import { requirePageAuth } from "@/lib/require-auth";
 import { getCurrentMonthIncome } from "@/lib/income";
-import { currentMonthRange, formatDate } from "@/lib/utils/date";
-import { format } from "date-fns";
+import { currentMonthRange, formatDate, todayISO } from "@/lib/utils/date";
+import { format, parseISO } from "date-fns";
+import { es } from "date-fns/locale";
 import { Euro, Receipt } from "lucide-react";
 import {
   Card,
@@ -42,7 +43,7 @@ export default async function PagosPage() {
   }
 
   const all = payments ?? [];
-  const now = new Date();
+  const monthName = format(parseISO(todayISO()), "MMMM", { locale: es });
   const { start: monthStart, end: monthEnd } = currentMonthRange();
 
   return (
@@ -60,7 +61,7 @@ export default async function PagosPage() {
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-                Ingresos · {format(now, "MMMM")}
+                Ingresos · {monthName}
               </span>
               <div className="w-8 h-8 rounded-xl bg-foreground/8 border border-border flex items-center justify-center">
                 <Euro className="w-3.5 h-3.5 text-muted-foreground" />
@@ -77,7 +78,7 @@ export default async function PagosPage() {
           <CardContent className="pt-5 pb-4 px-5">
             <div className="flex items-center justify-between mb-3">
               <span className="text-[11px] font-semibold tracking-widest uppercase text-muted-foreground/70">
-                Renovaciones · {format(now, "MMMM")}
+                Renovaciones · {monthName}
               </span>
               <div className="w-8 h-8 rounded-xl bg-foreground/8 border border-border flex items-center justify-center">
                 <Receipt className="w-3.5 h-3.5 text-muted-foreground" />

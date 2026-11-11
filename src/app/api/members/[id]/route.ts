@@ -1,7 +1,7 @@
 import { requireAuth } from "@/lib/require-auth";
 import { getSupabaseClient } from "@/lib/supabase";
 import { memberUpdateSchema } from "@/lib/schemas/member";
-import { isPaymentDateCorrection } from "@/lib/utils/date";
+import { affectsPaymentHistory, isPaymentDateCorrection } from "@/lib/utils/date";
 import { NextResponse } from "next/server";
 
 const MEMBER_ID_RE = /^\d+$/;
@@ -70,10 +70,11 @@ export async function PUT(
 
   const supabase = getSupabaseClient();
 
-  // The edit form always sends paid_at, so compare it with the stored value:
-  // only a changed date affects the payment history.
+  // The edit form always sends paid_at, so compare it with the stored values:
+  // only a changed date, or a same-day renewal, affects the payment history.
   let previous: { paid_at: string; expires_at: string } | null = null;
-  if (updateData.paid_at !== undefined) {
+  const { paid_at: nextPaidAt, expires_at: nextExpiresAt } = parsed.data;
+  if (nextPaidAt !== undefined) {
     const { data: current, error: fetchError } = await supabase
       .from("members")
       .select("paid_at, expires_at")
@@ -82,7 +83,8 @@ export async function PUT(
     if (fetchError || !current) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (current.paid_at !== updateData.paid_at) previous = current;
+    const next = { paid_at: nextPaidAt, expires_at: nextExpiresAt ?? current.expires_at };
+    if (affectsPaymentHistory(current, next)) previous = current;
   }
 
   const { data, error } = await supabase

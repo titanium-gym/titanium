@@ -106,4 +106,37 @@ describe("middleware", () => {
     expect(responseCsp).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/);
     expect(res.headers.get("x-middleware-request-content-security-policy")).toBe(responseCsp);
   });
+
+  describe("rate limiting", () => {
+    const from = (ip: string) => ({ "x-forwarded-for": ip });
+
+    beforeEach(() => {
+      vi.stubEnv("RATE_LIMIT_DISABLED", "false");
+    });
+
+    it("limits /login to 10 requests a minute per IP", () => {
+      for (let i = 0; i < 10; i++) {
+        expect(run("/login", null, from("203.0.113.1")).status).toBe(200);
+      }
+
+      const res = run("/login", null, from("203.0.113.1"));
+
+      expect(res.status).toBe(429);
+      expect(res.headers.get("retry-after")).toBe("60");
+    });
+
+    it("does not let page views use up the /login allowance", () => {
+      for (let i = 0; i < 15; i++) run("/dashboard/socios", allowed, from("203.0.113.2"));
+
+      const res = run("/login", null, from("203.0.113.2"));
+
+      expect(res.headers.get("x-middleware-next")).toBe("1");
+    });
+
+    it("counts each IP separately", () => {
+      for (let i = 0; i < 11; i++) run("/login", null, from("203.0.113.3"));
+
+      expect(run("/login", null, from("203.0.113.4")).status).toBe(200);
+    });
+  });
 });

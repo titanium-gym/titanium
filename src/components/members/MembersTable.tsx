@@ -100,7 +100,6 @@ function SortableHead({
     >
       <button
         onClick={() => onSort(field)}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onSort(field); }}
         className="flex items-center gap-1 w-full bg-transparent border-0 p-0 text-inherit cursor-pointer"
       >
         {label}

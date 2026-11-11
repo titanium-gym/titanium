@@ -43,6 +43,14 @@ export function isPaymentDateCorrection(before: PaymentDates, after: PaymentDate
   return paidShift < 15 && expiryGain < 28;
 }
 
+/**
+ * Whether an edit touches the payment history: paid_at changed, or the expiry
+ * gained a month on the same paid_at (a second renewal on the same day).
+ */
+export function affectsPaymentHistory(before: PaymentDates, after: PaymentDates): boolean {
+  return before.paid_at !== after.paid_at || !isPaymentDateCorrection(before, after);
+}
+
 export function formatDate(dateStr: string): string {
   try {
     return format(parseISO(dateStr), "dd/MM/yyyy", { locale: es });
